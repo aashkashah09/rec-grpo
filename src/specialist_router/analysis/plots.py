@@ -38,6 +38,53 @@ def plot_frontier(rows: Sequence[dict[str, object]], out_path: str | Path) -> No
     plt.close(fig)
 
 
+def plot_lambda_mu_heatmap(
+    rows: Sequence[dict[str, object]],
+    lambdas: Sequence[float],
+    mus: Sequence[float],
+    out_path: str | Path,
+) -> None:
+    """Heatmap of DR margin (best learned router − always_api) over the (λ, μ) grid.
+
+    Diverging colormap centred at 0: positive (blue) cells are where a learned router beats
+    always_api on reward; the annotation is the signed margin.
+    """
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    grid: dict[tuple[float, float], float] = {}
+    for r in rows:
+        grid[(float(r["lambda"]), float(r["mu"]))] = float(r["margin_vs_api"])  # type: ignore[arg-type]
+    matrix = [[grid[(float(lam), float(mu))] for mu in mus] for lam in lambdas]
+    span = max((abs(v) for row in matrix for v in row), default=0.0) or 1.0
+
+    fig, ax = plt.subplots(figsize=(6, 4.5))
+    im = ax.imshow(matrix, cmap="RdBu", vmin=-span, vmax=span, aspect="auto")
+    ax.set_xticks(range(len(mus)), [f"{m:.2f}" for m in mus])
+    ax.set_yticks(range(len(lambdas)), [f"{lam:.2f}" for lam in lambdas])
+    ax.set_xlabel("μ (latency weight)")
+    ax.set_ylabel("λ (cost weight)")
+    ax.set_title(f"DR margin: best learned router − always_api — {_STUB_NOTE}")
+    for i in range(len(lambdas)):
+        for j in range(len(mus)):
+            value = matrix[i][j]
+            ax.text(
+                j,
+                i,
+                f"{value:+.3f}",
+                ha="center",
+                va="center",
+                fontsize=7,
+                color="black" if abs(value) < span * 0.6 else "white",
+            )
+    fig.colorbar(im, ax=ax, label="reward margin (learned − always_api)")
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=120)
+    plt.close(fig)
+
+
 def plot_calibration(rows: Sequence[dict[str, object]], out_path: str | Path) -> None:
     """Plot OPE-predicted value (with CI error bars) against realized value; y=x is perfect."""
     import matplotlib
