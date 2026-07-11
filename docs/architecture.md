@@ -2,9 +2,10 @@
 
 Data flow for the Specialist + Router system (from [`PROJECT_PLAN.md`](../PROJECT_PLAN.md)).
 Components are implemented phase by phase. **Implemented so far:** the entire `env/` block
-below (Phase 1) — seeded DB, task templates + ground truth, sandboxed tools, episode loop, and
-verifier. The `agents/`, `router/`, and `ope/`/`evaluation/` blocks are Phase 2+ and this
-diagram runs ahead of the code there until Phase 4.
+(Phase 1) and the `router/` + `ope/` blocks (Phase 2), driven on CPU by a **stub simulator**
+backend in place of live agents. The real `local_agent`/`api_agent` arms exist behind the same
+`ArmRunner`/`Agent` interfaces but are exercised only in Phase 4 (`serving.backend: real`); until
+then the diagram's `agents/` box runs ahead of what CI drives.
 
 ```mermaid
 flowchart TD
@@ -20,7 +21,8 @@ flowchart TD
         EPISODE --> VERIFIER
     end
 
-    subgraph AGENTS["agents/ (Phase 2/4)"]
+    subgraph AGENTS["agents/ + serving/ (Phase 2 stub → Phase 4 real)"]
+        STUB[SimulatedArmRunner<br/>seeded quality/cost/latency — CPU/CI]
         LOCAL[local_agent<br/>base or specialist checkpoint]
         API[api_agent<br/>frontier API]
     end
@@ -40,8 +42,10 @@ flowchart TD
 
     TASKS --> FEATURES
     FEATURES --> POLICY
+    POLICY -->|action| STUB
     POLICY -->|action| LOCAL
     POLICY -->|action| API
+    STUB -->|submits GT/wrong| VERIFIER
     LOCAL --> EPISODE
     API --> EPISODE
     VERIFIER --> REWARD

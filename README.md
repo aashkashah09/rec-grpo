@@ -7,9 +7,11 @@ behind a contextual-bandit router that chooses per query between the specialist 
 frontier API — with propensity-logged decisions and off-policy evaluation (IPS/SNIPS/DR)
 used to select the routing policy, validated by replay A/B.
 
-> **Status: Phase 1 — environment, tasks, verifier.** The deterministic SQL-analytics
-> environment is implemented and tested. No model results yet; every metric in this README
-> will link to a committed artifact when it lands. See [`PROJECT_PLAN.md`](PROJECT_PLAN.md).
+> **Status: Phase 2 — router, serving, propensity logging, and OPE.** The contextual-bandit
+> router, off-policy estimators (IPS/SNIPS/DR + direct method), bootstrap CIs, replay-A/B, and the
+> estimator-breakage study are implemented and tested, driven on CPU by a **stub-agent simulator**.
+> Every Phase-2 number below is stub/CPU-simulator data — real-model numbers arrive in Phase 4.
+> See [`PROJECT_PLAN.md`](PROJECT_PLAN.md).
 
 ## Quickstart
 
@@ -89,5 +91,67 @@ A committed 16-task sample lives at
 [`artifacts/samples/phase1_tasks_sample.jsonl`](artifacts/samples/phase1_tasks_sample.jsonl).
 Design rationale is in [`docs/decisions/`](docs/decisions/) (ADRs 001–004).
 
-_Later phases (Router/OPE, GRPO training, Integration, Report) are described in
-`PROJECT_PLAN.md` and will be filled in here as they complete._
+### Phase 2 — Router, serving, propensity logging & OPE ✅
+
+A per-query contextual-bandit router chooses between a cheap **local** arm and an expensive
+**api** arm; decisions are propensity-logged and evaluated off-policy, then validated by replay.
+Driven on CPU by a stub simulator (no GPU, no API), so the whole pipeline reproduces from config.
+
+- **Featurizer** ([`router/features.py`](src/specialist_router/router/features.py)) — bias +
+  difficulty-proxy heuristics (length, entity/numeric/date counts, question-type one-hot) + a
+  deterministic hashing embedding. The hidden `difficulty`/`template_id` never enter the vector.
+- **Reward** ([`router/reward.py`](src/specialist_router/router/reward.py)) —
+  `quality − λ·cost_norm − μ·latency_norm` with **λ = 0.3, μ = 0.1** and *fixed* reference scales
+  (stationary across logs). `quality` is the deterministic verifier verdict — no LLM-judge
+  (see [ADR-007](docs/decisions/007-reward-and-no-judge.md)).
+- **Policies** ([`router/policies.py`](src/specialist_router/router/policies.py)) — Uniform
+  (logging), EpsilonGreedy, LinUCB, ThompsonLogistic. Every decision logs context, action,
+  propensity, policy version, and reward components as versioned JSONL
+  ([`RouterDecision`](src/specialist_router/env/records.py), schema v2).
+- **OPE** ([`ope/`](src/specialist_router/ope/)) — IPS, SNIPS, direct method, and cross-fitted DR,
+  with bootstrap CIs and ESS diagnostics — applied **only** to the single routing decision, never
+  to agent trajectories ([`CLAUDE.md`](CLAUDE.md) rule #2).
+- **Replay-A/B** ([`ope/replay.py`](src/specialist_router/ope/replay.py)) — deploy each candidate
+  on fresh traffic and compare realized value to the OPE prediction; realized and predicted rewards
+  are asserted to be on the same λ/μ scale.
+
+Reproduce everything on CPU (writes tables + figures under [`artifacts/phase2/`](artifacts/phase2/)):
+
+```bash
+make repro-phase2          # traffic -> OPE -> replay-A/B -> breakage -> tables/figures
+make traffic ope           # or the individual stages
+```
+
+**OPE — value of each policy** (stub/CPU-simulator; 2000 Uniform-logged decisions):
+
+| policy | IPS | SNIPS | DM | DR | DR 95% CI | ESS frac |
+| --- | --- | --- | --- | --- | --- | --- |
+| uniform | 0.508 | 0.508 | 0.511 | 0.511 | [0.492, 0.531] | 1.00 |
+| epsilon_greedy | 0.570 | 0.584 | 0.580 | 0.584 | [0.564, 0.605] | 0.54 |
+| linucb | 0.538 | 0.545 | 0.545 | 0.547 | [0.530, 0.565] | 0.89 |
+| thompson_logistic | 0.565 | 0.583 | 0.581 | 0.583 | [0.564, 0.603] | 0.59 |
+| always_local | 0.451 | 0.441 | 0.442 | 0.443 | [0.411, 0.476] | 0.51 |
+| always_api | 0.566 | 0.580 | 0.579 | 0.579 | [0.559, 0.598] | 0.49 |
+
+The learned routers beat Uniform and always-local; **replay-A/B lands 5/6 policies inside their DR
+CI** (epsilon_greedy is the honest miss — OPE was slightly optimistic for the most-exploiting
+policy). On the realized cost/quality frontier, `epsilon_greedy` reaches **quality 0.81 at
+$0.014/decision** vs `always_api`'s **0.88 at $0.018** — near-frontier quality routing ~20% of
+traffic to the cheap arm. With these particular stub cost/latency scales the *reward*-optimal point
+sits close to always-frontier; the λ/μ sweep is what surfaces where the router wins on reward too.
+
+**When estimators break** (known-truth tabular simulator, shrinking logging overlap):
+
+| min π₀ | IPS std | SNIPS std | DR std | ESS frac |
+| --- | --- | --- | --- | --- |
+| 0.50 | 0.009 | 0.009 | 0.010 | 0.70 |
+| 0.05 | 0.028 | 0.025 | 0.025 | 0.13 |
+| 0.01 | 0.063 | 0.047 | 0.051 | 0.03 |
+
+As overlap collapses, IPS variance explodes while SNIPS/DR stay steadier and ESS falls toward zero —
+the reason the logging policy is Uniform by design. Full tables and figures:
+[`artifacts/phase2/`](artifacts/phase2/). Design rationale:
+[ADRs 005–009](docs/decisions/).
+
+_Later phases (GRPO training, Integration, Report) are described in `PROJECT_PLAN.md` and will be
+filled in here as they complete._
