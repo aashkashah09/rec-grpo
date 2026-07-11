@@ -1,8 +1,10 @@
 # Architecture
 
-Target data flow for the Specialist + Router system. This is the intended design
-(from [`PROJECT_PLAN.md`](../PROJECT_PLAN.md)); components are implemented phase by phase,
-so this diagram runs ahead of the code until Phase 4.
+Data flow for the Specialist + Router system (from [`PROJECT_PLAN.md`](../PROJECT_PLAN.md)).
+Components are implemented phase by phase. **Implemented so far:** the entire `env/` block
+below (Phase 1) — seeded DB, task templates + ground truth, sandboxed tools, episode loop, and
+verifier. The `agents/`, `router/`, and `ope/`/`evaluation/` blocks are Phase 2+ and this
+diagram runs ahead of the code there until Phase 4.
 
 ```mermaid
 flowchart TD
