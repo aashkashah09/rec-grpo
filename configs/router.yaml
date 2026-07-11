@@ -1,0 +1,4 @@
+# Router config — Phase 2 (bandit algo, features, reward weights lambda/mu).
+# Placeholder only in Phase 0. Reward weights lambda (cost) and mu (latency) are
+# left unset here on purpose; defaults are decided with the user, not guessed.
+schema_version: 0
