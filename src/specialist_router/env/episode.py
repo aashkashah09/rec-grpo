@@ -84,7 +84,20 @@ def run_episode(task: Task, agent: Agent, tools: ToolContext, config: EpisodeCon
     tool_calls: list[ToolCall] = []
 
     for turn in range(1, config.max_turns + 1):
-        action: Action = agent.act(obs)
+        try:
+            action: Action = agent.act(obs)
+        except Exception:
+            # A real (vLLM/API) agent can fail mid-episode — a transport error, a timeout, an
+            # unparseable response that raises. The loop owns robustness, so we record a
+            # structured ``error`` outcome (never silently) rather than letting it propagate and
+            # abort a whole traffic run. The trust-critical verifier stays a separate, pure step.
+            return Trajectory(
+                task_id=task.task_id,
+                tool_calls=tool_calls,
+                final_answer=None,
+                stop_reason="error",
+                num_turns=turn,
+            )
         if isinstance(action, FinalAnswer):
             return Trajectory(
                 task_id=task.task_id,
