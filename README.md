@@ -203,16 +203,23 @@ trace to a real W&B run.
   come from the Phase-2 frontier `api_agent` (verifier-correct episodes only), kept strictly separate
   from the RL run. It **prints an estimated API cost and refuses to spend without `--confirm-spend`**.
 
-Validate the whole pipeline on CPU before renting a GPU (no torch/trl needed):
+Validate the pipeline on CPU before renting a GPU. Two dry-runs (see
+[ADR-014](docs/decisions/014-training-cpu-extra.md)):
 
 ```bash
-make grpo-dryrun     # env rollout -> verify -> reward -> group advantage -> trainer-input contract
+# Dependency-free: env rollout -> verify -> reward -> group advantage -> trainer-input contract.
+make grpo-dryrun-mock
+
+# Real tiny GRPOTrainer step on CPU (macOS-friendly; no vllm/CUDA). The training-cpu extra excludes
+# vllm/bitsandbytes so it installs on macOS/arm64, unlike the full `training` extra.
+uv sync --extra training-cpu
+make grpo-dryrun                   # runs a couple of real GRPOTrainer steps on a tiny model, on CPU
+uv run pytest -m training          # config-wiring check against the installed TRL
 ```
 
-Then, on a GPU box (`uv sync --extra training`):
+Then, on a GPU box (`uv sync --extra training` — adds vLLM + 4-bit QLoRA):
 
 ```bash
-uv run pytest -m training          # verify config wiring against the pinned TRL
 make sft-warmup ARGS=--confirm-spend   # optional; prints cost first
 make train-grpo                    # GRPO training (reads configs/grpo.yaml)
 ```
