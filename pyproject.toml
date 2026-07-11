@@ -17,10 +17,24 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Deferred — NOT installed in Phase 0. Added/pinned in the phase that introduces them.
-# Phase 2 (router featurizer, OPE reward model):
-serving = [
-  # "fastapi", "uvicorn", "httpx", "sentence-transformers", "scikit-learn"
+# Phase 2 optional extras. NONE are installed in CI (`uv sync --frozen` installs the default +
+# dev deps only): every CI-exercised path — hashing featurizer, numpy estimators, stub agents,
+# the RouterService core — runs on numpy/pydantic/pyyaml alone. These extras back only the
+# non-CI paths (the live FastAPI service, real HTTP agents, figures, the optional GBM/MiniLM
+# variants). torch is deliberately kept out of the lock (deferred to Phase 3 training), so the
+# real sentence-transformers embedding is a documented manual install, not a locked extra
+# (see ADR-006).
+serving = [        # live /solve service + real OpenAI-compatible agents
+  "fastapi>=0.110",
+  "uvicorn>=0.29",
+  "httpx>=0.27",
+]
+analysis = [       # report tables + frontier / calibration figures
+  "pandas>=2.0",
+  "matplotlib>=3.8",
+]
+ml = [             # optional DR outcome-model variant (numpy ridge is the default)
+  "scikit-learn>=1.4",
 ]
 # Phase 3 (GRPO specialist training — GPU only, never in CI):
 training = [
@@ -94,6 +108,19 @@ warn_unused_configs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 show_error_codes = true
+
+# Optional Phase-2 extras are NOT installed in the CI mypy environment (they are optional
+# extras, not dev deps). These modules are imported lazily and only on the non-CI paths, so we
+# let mypy treat them as untyped rather than fail `mypy src` when they are absent.
+[[tool.mypy.overrides]]
+module = [
+  "fastapi.*",
+  "httpx.*",
+  "matplotlib.*",
+  "sklearn.*",
+  "sentence_transformers.*",
+]
+ignore_missing_imports = true
 
 # ----------------------------------------------------------------------------
 # pytest: markers for gpu/external are declared and skipped-by-default in CI

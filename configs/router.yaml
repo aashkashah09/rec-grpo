@@ -1,4 +1,39 @@
-# Router config — Phase 2 (bandit algo, features, reward weights lambda/mu).
-# Placeholder only in Phase 0. Reward weights lambda (cost) and mu (latency) are
-# left unset here on purpose; defaults are decided with the user, not guessed.
-schema_version: 0
+# Router config — Phase 2 (contextual-bandit routing: local specialist vs frontier API).
+# Loaded through the one typed config module (src/specialist_router/config.py).
+# Reward weights and normalization approved by the user (see ADR-007):
+#   reward = quality - lambda*cost_norm - mu*latency_norm,
+#   with FIXED reference scales (not dataset min/max) so reward is stationary across logs.
+schema_version: 1
+seed: 20260711
+
+# The logging policy that generates the offline dataset. Uniform by design so propensities are
+# bounded (0.5) and OPE overlap is guaranteed (PROJECT_PLAN §5).
+logging_policy: uniform
+
+reward:
+  lambda_cost: 0.3        # max cost penalty in quality units (at cost_norm = 1)
+  mu_latency: 0.1         # max latency penalty in quality units (at latency_norm = 1)
+  cost_ref_usd: 0.02      # cost saturating the penalty: $0.02/decision (~a frontier call)
+  latency_ref_s: 8.0      # latency saturating the penalty: 8 s/decision
+
+features:
+  embedding: hashing      # deterministic, numpy-only (CI + repro). "minilm" needs sentence-transformers.
+  embed_dim: 32
+  ngram_min: 3
+  ngram_max: 5
+  len_norm_chars: 400.0   # question length is divided by these then clipped to [0, 1]
+  len_norm_tokens: 80.0
+  count_norm: 8.0         # entity / numeric / date counts divided by this then clipped
+
+policies:
+  epsilon_greedy:
+    epsilon: 0.1
+    ridge_lambda: 1.0
+  linucb:
+    alpha: 1.0
+    ridge_lambda: 1.0
+    temperature: 0.25     # softmax temperature turning UCB scores into a logged propensity
+  thompson:
+    prior_variance: 1.0
+    newton_steps: 25
+    n_posterior_samples: 256
