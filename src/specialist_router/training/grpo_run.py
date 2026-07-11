@@ -21,6 +21,7 @@ them against the installed TRL when provisioning the GPU box (TRL's agentic surf
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -150,27 +151,167 @@ def build_vllm_generate_fn(config: GrpoConfig, tokenizer: Any, llm: Any) -> Any:
     return generate_fn
 
 
-def build_rollout_func(
-    env_rollout: EnvRollout, sampler: TaskSampler, task_by_id: dict[str, Any]
-) -> Any:
-    """Adapt :meth:`EnvRollout.generate_batch` to TRL's ``rollout_func`` contract.
+def _no_special_encode(tokenizer: Any) -> Any:
+    """Return an ``encode(text) -> list[int]`` that never adds BOS/EOS (spans are concatenated)."""
 
-    TRL supplies the group-expanded batch (each task repeated ``num_generations`` times) with the
-    dataset ``task_id`` column; we roll out one episode per row and return the token tensors TRL
-    trains on. Verdicts are fed to the curriculum ``sampler`` here (the only place we observe them).
+    def encode(text: str) -> list[int]:
+        return list(tokenizer.encode(text, add_special_tokens=False))
+
+    return encode
+
+
+def build_hf_generate_fn(config: GrpoConfig, tokenizer: Any, model: Any) -> Any:
+    """Return a ``generate_fn`` backed by plain ``transformers`` generation (CPU dry-run; no vLLM).
+
+    Renders the running conversation with the chat template, decodes one assistant turn, and reads
+    per-token logprobs from ``output_scores``. Exact logprob fidelity is not required for a wiring
+    dry-run — TRL recomputes new-policy logprobs during the step — so raw per-step scores suffice.
+    """
+    import torch
+
+    def generate_fn(messages: list[dict[str, str]], max_new_tokens: int) -> TurnGeneration:
+        prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        enc = tokenizer(prompt, return_tensors="pt")
+        with torch.no_grad():
+            out = model.generate(
+                **enc,
+                max_new_tokens=max_new_tokens,
+                do_sample=True,
+                temperature=config.grpo.temperature,
+                top_p=config.grpo.top_p,
+                return_dict_in_generate=True,
+                output_scores=True,
+                pad_token_id=tokenizer.pad_token_id or tokenizer.eos_token_id,
+            )
+        gen_ids = out.sequences[0][enc["input_ids"].shape[1] :]
+        logprobs: list[float] = []
+        for score, tid in zip(out.scores, gen_ids, strict=True):
+            logprobs.append(float(torch.log_softmax(score[0], dim=-1)[int(tid)]))
+        text = tokenizer.decode(gen_ids, skip_special_tokens=True)
+        return TurnGeneration(text=text, token_ids=[int(t) for t in gen_ids], logprobs=logprobs)
+
+    return generate_fn
+
+
+def dry_run_cpu(config: GrpoConfig) -> None:
+    """Run a real, tiny GRPOTrainer step on CPU — no vLLM, no 4-bit — to validate wiring on macOS.
+
+    Uses the ``training-cpu`` extra (torch/trl/peft/transformers). Everything is real: the tiny
+    model and tokenizer, LoRA via ``peft_config``, the env-coupled rollout through the sandboxed
+    loop and verifier, and ``GRPOTrainer.train()`` for ``dry_run.max_steps`` steps. This is the
+    macOS-installable "tiny-real" check that precedes renting a GPU (ADR-014).
+    """
+    import tempfile
+
+    import torch
+    from datasets import Dataset
+    from peft import LoraConfig
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from trl import GRPOConfig as TrlGrpoConfig
+    from trl import GRPOTrainer
+
+    from specialist_router.env.database import build_dataset, write_sqlite_file
+    from specialist_router.env.episode import system_prompt
+
+    env = load_config(config.dry_run.env_config)
+    tokenizer = AutoTokenizer.from_pretrained(config.dry_run.tiny_model)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    model = AutoModelForCausalLM.from_pretrained(
+        config.dry_run.tiny_model, torch_dtype=torch.float32
+    )
+
+    with tempfile.TemporaryDirectory() as tmp:
+        db_path = str(Path(tmp) / "env.sqlite")
+        write_sqlite_file(build_dataset(env.db, env.seed), db_path)
+        tools = ToolContext(db_path, env.tools.run_sql, env.tools.python_calc)
+        try:
+            pool = build_task_pool(config.dry_run.env_config, n_override=config.dry_run.n_tasks * 4)
+            split = split_tasks(pool, config.data.heldout_fraction, config.data.split_seed)
+            train = split.train[: config.dry_run.n_tasks]
+            sampler = TaskSampler.from_config(train, config.data, config.seed)
+            schema = tools.inspect_schema()
+            task_by_prompt = {system_prompt(t, schema): t for t in train}
+
+            env_rollout = EnvRollout(
+                generate_fn=build_hf_generate_fn(config, tokenizer, model),
+                encode=_no_special_encode(tokenizer),
+                tools=tools,
+                rollout_config=config.rollout,
+                verifier_config=env.verifier,
+                reward_config=config.reward,
+            )
+            rows = [{"task_id": t.task_id, "prompt": system_prompt(t, schema)} for t in train]
+            dataset = Dataset.from_list(rows)
+
+            g = config.grpo
+            args = TrlGrpoConfig(
+                output_dir=str(Path(tmp) / "out"),
+                num_generations=config.dry_run.num_generations,
+                per_device_train_batch_size=config.dry_run.num_generations,
+                gradient_accumulation_steps=1,
+                max_steps=config.dry_run.max_steps,
+                max_completion_length=256,
+                temperature=g.temperature,
+                top_p=g.top_p,
+                beta=g.beta,
+                epsilon=g.epsilon,
+                loss_type=g.loss_type,
+                learning_rate=g.learning_rate,
+                use_vllm=False,
+                bf16=False,
+                fp16=False,
+                report_to=[],
+                logging_steps=1,
+                seed=config.seed,
+            )
+            lora = LoraConfig(
+                r=8, lora_alpha=16, target_modules="all-linear", task_type="CAUSAL_LM"
+            )
+            trainer = GRPOTrainer(
+                model=model,
+                args=args,
+                train_dataset=dataset,
+                reward_funcs=[env_rollout.reward_fn],
+                rollout_func=build_rollout_func(env_rollout, sampler, task_by_prompt),
+                peft_config=lora,
+            )
+            trainer.train()
+        finally:
+            tools.close()
+    print(
+        f"real CPU dry-run OK: {config.dry_run.max_steps} GRPOTrainer step(s) on "
+        f"{config.dry_run.tiny_model} (no vLLM, no 4-bit)"
+    )
+
+
+def _prompt_key(prompt: Any) -> str:
+    """A stable key for a batch prompt (a string, or a JSON-normalised message list)."""
+    return prompt if isinstance(prompt, str) else json.dumps(prompt, sort_keys=True)
+
+
+def build_rollout_func(
+    env_rollout: EnvRollout, sampler: TaskSampler, task_by_prompt: dict[str, Any]
+) -> Any:
+    """Adapt :meth:`EnvRollout.generate_batch` to TRL 1.x's ``rollout_func`` contract.
+
+    Verified against the installed TRL: the trainer calls ``rollout_func(prompts, trainer)`` with
+    the group-expanded prompts (each task prompt repeated ``num_generations`` times) and requires
+    the keys ``{prompt_ids, completion_ids, logprobs}``; a custom ``env_mask`` supplies the
+    assistant/tool loss mask (``1`` = model tokens, ``0`` = injected). We map each prompt to its
+    task, roll out one episode per prompt, and feed verdicts to the curriculum ``sampler``.
     """
 
-    def rollout_func(prompts: list[str], **kwargs: Any) -> dict[str, list[Any]]:
-        task_ids: list[str] = list(kwargs["task_id"])
-        tasks = [task_by_id[tid] for tid in task_ids]
+    def rollout_func(prompts: list[Any], trainer: Any = None) -> dict[str, list[Any]]:
+        tasks = [task_by_prompt[_prompt_key(p)] for p in prompts]
         rollouts = env_rollout.generate_batch(tasks)
         for roll in rollouts:
             sampler.record_outcome(roll.task_id, bool(roll.verdict.correct))
         return {
             "prompt_ids": [r.prompt_ids for r in rollouts],
             "completion_ids": [r.completion_ids for r in rollouts],
-            "completion_mask": [r.completion_mask for r in rollouts],
             "logprobs": [r.logprobs for r in rollouts],
+            "env_mask": [r.completion_mask for r in rollouts],
         }
 
     return rollout_func
@@ -222,13 +363,12 @@ def _train_on_gpu(
     pool = build_task_pool(config.data.env_config, n_override=config.data.task_pool_size)
     split = split_tasks(pool, config.data.heldout_fraction, config.data.split_seed)
     sampler = TaskSampler.from_config(split.train, config.data, config.seed)
-    task_by_id = {t.task_id: t for t in split.train}
 
     llm = None  # TRL provides the colocate vLLM engine to rollout_func in current versions;
     generate_fn = build_vllm_generate_fn(config, tokenizer, llm)
     env_rollout = EnvRollout(
         generate_fn=generate_fn,
-        encode=tokenizer.encode,
+        encode=_no_special_encode(tokenizer),
         tools=tools,
         rollout_config=config.rollout,
         verifier_config=verifier_config,
@@ -236,6 +376,7 @@ def _train_on_gpu(
     )
 
     schema = tools.inspect_schema()
+    task_by_prompt = {system_prompt(t, schema): t for t in split.train}
     train_rows = [{"task_id": t.task_id, "prompt": system_prompt(t, schema)} for t in split.train]
     dataset = Dataset.from_list(train_rows)
 
@@ -244,7 +385,7 @@ def _train_on_gpu(
         args=build_grpo_config(config),
         train_dataset=dataset,
         reward_funcs=[env_rollout.reward_fn],
-        rollout_func=build_rollout_func(env_rollout, sampler, task_by_id),
+        rollout_func=build_rollout_func(env_rollout, sampler, task_by_prompt),
     )
     wandb_run = WandbRun(config.wandb, run_config={"grpo_config": config.model_dump()})
     trainer.add_callback(
