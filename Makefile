@@ -3,7 +3,8 @@
 # that fail loudly rather than pretend to work (no fabricated capability).
 
 .PHONY: setup lint test \
-        generate-tasks serve traffic ope repro-phase2 eval report
+        generate-tasks serve traffic ope repro-phase2 eval report \
+        grpo-dryrun train-grpo sft-warmup
 
 # Defaults for generate-tasks (override on the command line, e.g. `make generate-tasks CONFIG=configs/env.yaml`).
 CONFIG ?= configs/env.mini.yaml
@@ -62,3 +63,17 @@ eval:  ## [Phase 2/4] Regenerate the cost/quality frontier figure from committed
 
 report:  ## [Phase 5] Generate report tables/figures from artifacts.
 	@echo "report: not implemented until Phase 5" && exit 1
+
+# ---- Phase 3 (GRPO specialist training) ------------------------------------
+# grpo-dryrun runs on CPU with no heavy deps; train-grpo and sft-warmup need the 'training' extra
+# (uv sync --extra training) and a GPU / frontier-API budget respectively.
+GRPO_CONFIG ?= configs/grpo.yaml
+
+grpo-dryrun:  ## [Phase 3] CPU dry-run of the full GRPO pipeline (mocked generation; no GPU).
+	uv run python scripts/grpo_dryrun.py --config $(GRPO_CONFIG) --seed $(SEED)
+
+train-grpo:  ## [Phase 3] Launch GRPO training (GPU; needs the 'training' extra). Add ARGS=--dry-run for CPU.
+	uv run python scripts/train_grpo.py --config $(GRPO_CONFIG) --seed $(SEED) $(ARGS)
+
+sft-warmup:  ## [Phase 3] SFT demo generation (frontier API). Prints cost; needs ARGS=--confirm-spend to spend.
+	uv run python scripts/sft_warmup.py --config $(GRPO_CONFIG) --serving-config $(SERVING_CONFIG) $(ARGS)

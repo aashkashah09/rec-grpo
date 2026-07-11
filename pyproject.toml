@@ -36,9 +36,19 @@ analysis = [       # report tables + frontier / calibration figures
 ml = [             # optional DR outcome-model variant (numpy ridge is the default)
   "scikit-learn>=1.4",
 ]
-# Phase 3 (GRPO specialist training — GPU only, never in CI):
+# Phase 3 (GRPO specialist training — GPU only, never installed in CI). Pins are intentionally
+# loose here; the exact TRL/vLLM/transformers versions are locked on the GPU box when it is
+# provisioned (TRL's agentic surface moves fast — re-verify GRPOConfig/rollout_func names then).
 training = [
-  # "torch", "trl", "peft", "transformers", "vllm", "wandb", "datasets"
+  "torch>=2.3",
+  "trl>=1.0",
+  "peft>=0.11",
+  "transformers>=4.44",
+  "vllm>=0.5",
+  "bitsandbytes>=0.43",
+  "accelerate>=0.30",
+  "datasets>=2.19",
+  "wandb>=0.17",
 ]
 
 [build-system]
@@ -119,6 +129,15 @@ module = [
   "matplotlib.*",
   "sklearn.*",
   "sentence_transformers.*",
+  # Phase-3 training extra (GPU only; never in the CI env). training/grpo_run.py and
+  # training/sft_warmup.py import these lazily on the GPU path, so mypy treats them as untyped.
+  "torch.*",
+  "trl.*",
+  "peft.*",
+  "transformers.*",
+  "vllm.*",
+  "datasets.*",
+  "wandb.*",
 ]
 ignore_missing_imports = true
 
@@ -133,6 +152,7 @@ addopts = "-ra --strict-markers"
 markers = [
   "gpu: requires a GPU; skipped by default and in CI",
   "external: calls an external API; skipped by default and in CI",
+  "training: requires the 'training' extra (torch/trl/…); skipped by default and in CI",
 ]
 
 [tool.coverage.run]

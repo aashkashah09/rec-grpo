@@ -30,6 +30,23 @@ _FIXTURE_SQL = _ROOT / "tests" / "fixtures" / "mini_db.sql"
 _MINI_CONFIG = _ROOT / "configs" / "env.mini.yaml"
 _CONFIGS = _ROOT / "configs"
 
+# Markers for tests that need resources CI does not have (a GPU, an external API, or the heavy
+# 'training' extra). They are skipped unless explicitly selected with ``-m <marker>`` (per CLAUDE.md
+# "skipped by default and in CI").
+_GATED_MARKERS = ("gpu", "external", "training")
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Skip gpu/external/training tests unless their marker is explicitly requested via ``-m``."""
+    markexpr = config.option.markexpr
+    for marker in _GATED_MARKERS:
+        if marker in markexpr:
+            continue  # user asked for this marker explicitly
+        skip = pytest.mark.skip(reason=f"needs -m {marker} (gated resource)")
+        for item in items:
+            if marker in item.keywords:
+                item.add_marker(skip)
+
 
 @pytest.fixture
 def env_config() -> Config:
