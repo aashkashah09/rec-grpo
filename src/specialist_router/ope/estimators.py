@@ -52,7 +52,9 @@ def importance_weights(
     weights = target_prop / data.propensity
     if weight_clip is not None:
         weights = np.minimum(weights, weight_clip)
-    return weights
+    # Explicit cast: newer numpy (>=2.3) stubs type ``__truediv__``/``minimum`` as ``Any``, so pin
+    # the declared float64 array return (behavior-neutral; ``weights`` is already float64).
+    return np.asarray(weights, dtype=np.float64)
 
 
 def cross_fitted_q(
