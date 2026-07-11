@@ -9,10 +9,10 @@ module ever parses YAML or reaches for a raw dict.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal, TypeVar
+from typing import Literal, Self, TypeVar
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class _Strict(BaseModel):
@@ -247,6 +247,251 @@ class ServingConfig(_Strict):
     api_endpoint: EndpointConfig | None = None
 
 
+# --------------------------------------------------------------------------------------------
+# Phase 3 configs: GRPO specialist training (``configs/grpo.yaml``). This module stays pure typed
+# config — the heavy training deps (torch/trl/peft/vllm/wandb) are NEVER imported here, so the
+# config (and the CPU dry-run) load and validate on CI without a GPU. Parameter names mirror the
+# TRL 1.x ``GRPOConfig`` surface confirmed in ADR-010; re-verify them against the pinned TRL when
+# the GPU box is provisioned.
+# --------------------------------------------------------------------------------------------
+
+
+class ModelConfig(_Strict):
+    """The base model to fine-tune, plus sequence and generation length limits.
+
+    ``max_completion_len`` caps the *total* tokens across the whole multi-turn conversation (all
+    assistant turns + injected tool results), which is how TRL 1.x interprets it — not per-turn.
+    """
+
+    name: str
+    max_seq_len: int = Field(gt=0)
+    max_prompt_len: int = Field(gt=0)
+    max_completion_len: int = Field(gt=0)
+    trust_remote_code: bool = False
+    attn_implementation: str = "flash_attention_2"
+    dtype: Literal["bfloat16", "float16", "float32"] = "bfloat16"
+
+
+class QloraConfig(_Strict):
+    """4-bit NF4 QLoRA adapter configuration (``peft.LoraConfig`` + bitsandbytes)."""
+
+    r: int = Field(gt=0)
+    alpha: int = Field(gt=0)
+    dropout: float = Field(ge=0.0, le=1.0)
+    target_modules: list[str] = Field(min_length=1)
+    bias: Literal["none", "all", "lora_only"] = "none"
+    load_in_4bit: bool = True
+    bnb_4bit_quant_type: Literal["nf4", "fp4"] = "nf4"
+    bnb_4bit_compute_dtype: Literal["bfloat16", "float16"] = "bfloat16"
+    bnb_4bit_use_double_quant: bool = True
+    use_gradient_checkpointing: bool = True
+
+
+class VllmConfig(_Strict):
+    """Colocated vLLM generation settings for GRPO rollouts.
+
+    ``importance_sampling_correction`` stays on for colocate mode (correcting the
+    generation/training policy mismatch); turning it off is a known GRPO footgun (ADR-010).
+    """
+
+    enable: bool = True
+    mode: Literal["colocate", "server"] = "colocate"
+    gpu_memory_utilization: float = Field(gt=0.0, le=1.0)
+    enable_sleep_mode: bool = True
+    tensor_parallel_size: int = Field(gt=0)
+    importance_sampling_correction: bool = True
+
+
+class GrpoTrainerConfig(_Strict):
+    """TRL ``GRPOConfig`` hyperparameters (names mirror TRL 1.x; see ADR-010).
+
+    ``num_generations`` is the group size G; it must be ``> 1`` or the group-relative advantage is
+    undefined. The effective rollout batch (``per_device_train_batch_size *
+    gradient_accumulation_steps``) must be divisible by ``num_generations`` so every group's G
+    completions stay together on-device.
+    """
+
+    num_generations: int = Field(gt=1)
+    num_iterations: int = Field(gt=0)
+    beta: float = Field(ge=0.0)
+    epsilon: float = Field(gt=0.0)
+    epsilon_high: float | None = Field(default=None)
+    loss_type: Literal["grpo", "dapo", "bnpo"] = "dapo"
+    scale_rewards: Literal["group", "batch", "none"] = "group"
+    temperature: float = Field(gt=0.0)
+    top_p: float = Field(gt=0.0, le=1.0)
+    learning_rate: float = Field(gt=0.0)
+    lr_scheduler_type: str = "cosine"
+    warmup_ratio: float = Field(ge=0.0, le=1.0)
+    weight_decay: float = Field(ge=0.0)
+    max_grad_norm: float = Field(gt=0.0)
+    per_device_train_batch_size: int = Field(gt=0)
+    gradient_accumulation_steps: int = Field(gt=0)
+    max_steps: int = Field(gt=0)
+    mask_truncated_completions: bool = True
+
+    @model_validator(mode="after")
+    def _batch_divisible_by_group(self) -> Self:
+        """The rollout batch must partition into whole groups of ``num_generations``."""
+        rollout_batch = self.per_device_train_batch_size * self.gradient_accumulation_steps
+        if rollout_batch % self.num_generations != 0:
+            raise ValueError(
+                f"per_device_train_batch_size * gradient_accumulation_steps ({rollout_batch}) "
+                f"must be divisible by num_generations ({self.num_generations})"
+            )
+        return self
+
+
+class RolloutConfig(_Strict):
+    """Env-coupled rollout budgets and tool-output caps.
+
+    The caps bound token/KV growth: multi-turn SQL episodes can emit large result tables, and every
+    tool-result token feeds back into the model's context and the colocate KV cache.
+    """
+
+    max_turns: int = Field(gt=0)
+    tool_budget: int = Field(gt=0)
+    max_tool_output_chars: int = Field(gt=0)
+    max_new_tokens_per_turn: int = Field(gt=0)
+
+
+class TrainingRewardConfig(_Strict):
+    """Weights for the GRPO training reward ``R = w_correct*correct + w_format*format_score``.
+
+    ``format_score`` is the mean of the enabled components, each in ``[0, 1]``. The correctness
+    term (from the deterministic verifier) dominates; the small format term breaks ties and keeps
+    gradients alive against binary-reward group collapse (ADR-011).
+    """
+
+    w_correct: float = Field(ge=0.0)
+    w_format: float = Field(ge=0.0)
+    format_components: list[
+        Literal[
+            "all_actions_parse",
+            "used_tool_before_answer",
+            "well_formed_final_answer",
+            "within_budget",
+        ]
+    ] = Field(min_length=1)
+
+
+class DataSplitConfig(_Strict):
+    """Task-pool generation and the deterministic template-balanced train/held-out split.
+
+    ``curriculum_min/max_pass_rate`` define an optional band: once a task has enough observed
+    rollouts, the sampler down-weights tasks the model always fails or always solves (both give
+    ~0 group-relative advantage). The band is applied at sampling time, never to the held-out set.
+    """
+
+    env_config: str
+    task_pool_size: int = Field(gt=0)
+    heldout_fraction: float = Field(gt=0.0, lt=1.0)
+    split_seed: int
+    curriculum_min_pass_rate: float = Field(ge=0.0, le=1.0)
+    curriculum_max_pass_rate: float = Field(ge=0.0, le=1.0)
+    curriculum_min_observations: int = Field(gt=0)
+
+    @model_validator(mode="after")
+    def _band_ordered(self) -> Self:
+        """The curriculum band must be a valid interval."""
+        if self.curriculum_min_pass_rate > self.curriculum_max_pass_rate:
+            raise ValueError(
+                f"curriculum_min_pass_rate ({self.curriculum_min_pass_rate}) must be <= "
+                f"curriculum_max_pass_rate ({self.curriculum_max_pass_rate})"
+            )
+        return self
+
+
+class EvalCadenceConfig(_Strict):
+    """Held-out evaluation cadence and top-K checkpoint retention."""
+
+    eval_every_steps: int = Field(gt=0)
+    n_heldout_tasks: int = Field(gt=0)
+    keep_top_k: int = Field(gt=0)
+    metric: Literal["overall_success"] = "overall_success"
+
+
+class WandbConfig(_Strict):
+    """Weights & Biases logging (disabled by default in the dry-run)."""
+
+    mode: Literal["online", "offline", "disabled"] = "online"
+    project: str
+    entity: str | None = Field(default=None)
+    run_name: str | None = Field(default=None)
+    log_every_steps: int = Field(gt=0)
+
+
+class CheckpointConfig(_Strict):
+    """Checkpointing, resume, and spot-interruption safety."""
+
+    output_dir: str
+    save_every_steps: int = Field(gt=0)
+    save_total_limit: int = Field(gt=0)
+    flush_on_sigterm: bool = True
+
+
+class SftConfig(_Strict):
+    """Optional SFT warmup: trigger, demo generation, and training — kept separate from the RL run.
+
+    Demos are generated through the Phase-2 frontier ``api_agent`` (reusing
+    ``configs/serving.yaml -> api_endpoint``, so no new provider choice), filtered to
+    verifier-correct episodes. The GRPO run consumes a warmup adapter only via an explicit
+    ``--init-from-sft`` flag; it is never merged automatically (ADR-013).
+    """
+
+    enabled: bool = False
+    trigger_compliance_threshold: float = Field(ge=0.0, le=1.0)
+    probe_n_tasks: int = Field(gt=0)
+    n_demos_min: int = Field(gt=0)
+    n_demos_max: int = Field(gt=0)
+    output_dir: str
+    epochs: int = Field(gt=0)
+    learning_rate: float = Field(gt=0.0)
+    max_seq_len: int = Field(gt=0)
+
+    @model_validator(mode="after")
+    def _demo_bounds_ordered(self) -> Self:
+        """The demo-count band must be a valid interval."""
+        if self.n_demos_min > self.n_demos_max:
+            raise ValueError(
+                f"n_demos_min ({self.n_demos_min}) must be <= n_demos_max ({self.n_demos_max})"
+            )
+        return self
+
+
+class DryRunConfig(_Strict):
+    """CPU dry-run overrides (no GPU).
+
+    The default dry-run mocks generation and needs no heavy deps (runs in CI). ``tiny_model`` backs
+    the opt-in ``@pytest.mark.training`` path that runs a real GRPOTrainer step on CPU.
+    """
+
+    env_config: str
+    tiny_model: str
+    num_generations: int = Field(gt=1)
+    max_steps: int = Field(gt=0)
+    n_tasks: int = Field(gt=0)
+
+
+class GrpoConfig(_Strict):
+    """Top-level Phase-3 GRPO training configuration (``configs/grpo.yaml``)."""
+
+    schema_version: int
+    seed: int
+    model: ModelConfig
+    qlora: QloraConfig
+    vllm: VllmConfig
+    grpo: GrpoTrainerConfig
+    rollout: RolloutConfig
+    reward: TrainingRewardConfig
+    data: DataSplitConfig
+    evaluation: EvalCadenceConfig
+    wandb: WandbConfig
+    checkpoint: CheckpointConfig
+    sft: SftConfig
+    dry_run: DryRunConfig
+
+
 _ModelT = TypeVar("_ModelT", bound=BaseModel)
 
 
@@ -307,3 +552,8 @@ def load_ope_config(path: str | Path, seed_override: int | None = None) -> OpeCo
 def load_serving_config(path: str | Path, seed_override: int | None = None) -> ServingConfig:
     """Load and validate a serving config (``configs/serving.yaml``)."""
     return _load_yaml_model(path, ServingConfig, seed_override)
+
+
+def load_grpo_config(path: str | Path, seed_override: int | None = None) -> GrpoConfig:
+    """Load and validate a GRPO training config (``configs/grpo.yaml``)."""
+    return _load_yaml_model(path, GrpoConfig, seed_override)

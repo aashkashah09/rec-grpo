@@ -18,9 +18,10 @@ from specialist_router.router.logger import (
 from tests.support import make_decision
 
 
-def test_router_decision_is_schema_v2() -> None:
-    assert SCHEMA_VERSION == 2
-    assert make_decision().schema_version == 2
+def test_record_schema_is_current_version() -> None:
+    # The module schema is v3 as of Phase 3 (adds SftDemo); RouterDecision's shape is unchanged.
+    assert SCHEMA_VERSION == 3
+    assert make_decision().schema_version == 3
 
 
 def test_propensity_must_be_positive() -> None:
