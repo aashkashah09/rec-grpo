@@ -169,5 +169,60 @@ the reason the logging policy is Uniform by design. Full tables and figures:
 [`artifacts/phase2/`](artifacts/phase2/). Design rationale:
 [ADRs 005–009](docs/decisions/).
 
-_Later phases (GRPO training, Integration, Report) are described in `PROJECT_PLAN.md` and will be
-filled in here as they complete._
+### Phase 3 — GRPO specialist training 🚧 (code + config + CPU dry-run; training run pending)
+
+GRPO fine-tunes Qwen3-4B-Instruct into the **local** SQL specialist against the *same* environment
+and the *same* deterministic verifier as the rest of the project, so Phase 4 is a checkpoint swap.
+This session ships the code, config, and a CPU dry-run; the training run happens on rented GPU
+hardware and its metrics are **TBD (pending run)** — no training numbers are reported until they
+trace to a real W&B run.
+
+- **Seam = TRL `rollout_func`** ([`training/rollout.py`](src/specialist_router/training/rollout.py),
+  [ADR-010](docs/decisions/010-grpo-rollout-seam.md)) — we own the multi-turn generation loop, so
+  the Phase-1/2 JSON tool protocol, `verify()`, and the eval harness are reused byte-for-byte.
+  `EnvRollout` drives the real [`run_episode`](src/specialist_router/env/episode.py) loop and records
+  the token stream with an **assistant-only loss mask** (tool-result tokens masked out).
+- **Reward** ([`training/reward.py`](src/specialist_router/training/reward.py),
+  [ADR-011](docs/decisions/011-training-reward.md)) — `R = 1.0·correct + 0.15·format_score`.
+  Correctness is the deterministic verifier verdict; the small format term keeps a gradient alive
+  when a GRPO group is all-correct/all-wrong (binary-reward collapse) but is too small to beat a
+  correct answer. GRPO turns `R` into a group-relative advantage — a training objective, **not**
+  trajectory-level OPE ([`CLAUDE.md`](CLAUDE.md) rule #2).
+- **Env-coupled data** ([`training/data.py`](src/specialist_router/training/data.py)) — training
+  tasks are generated from the environment, split into a deterministic template-balanced train /
+  held-out partition (a task is on exactly one side), with a pass-rate curriculum that skips tasks
+  the model always fails or always solves.
+- **Held-out eval** ([`evaluation/harness.py`](src/specialist_router/evaluation/harness.py)) —
+  every K steps on a fixed held-out sample: overall + per-template success, top-3 checkpoints by
+  held-out success, and a **format-rate drift guard** (format-rate falling while reward rises warns
+  of protocol drift / verifier gaming). W&B logging, resume-from-checkpoint, and SIGTERM
+  checkpoint-flush for spot instances live in
+  [`training/callbacks.py`](src/specialist_router/training/callbacks.py).
+- **Optional SFT warmup** ([`training/sft_warmup.py`](src/specialist_router/training/sft_warmup.py),
+  [ADR-013](docs/decisions/013-sft-warmup.md)) — only if base tool-format compliance < 60%; demos
+  come from the Phase-2 frontier `api_agent` (verifier-correct episodes only), kept strictly separate
+  from the RL run. It **prints an estimated API cost and refuses to spend without `--confirm-spend`**.
+
+Validate the whole pipeline on CPU before renting a GPU (no torch/trl needed):
+
+```bash
+make grpo-dryrun     # env rollout -> verify -> reward -> group advantage -> trainer-input contract
+```
+
+Then, on a GPU box (`uv sync --extra training`):
+
+```bash
+uv run pytest -m training          # verify config wiring against the pinned TRL
+make sft-warmup ARGS=--confirm-spend   # optional; prints cost first
+make train-grpo                    # GRPO training (reads configs/grpo.yaml)
+```
+
+**Hardware** ([`configs/grpo.yaml`](configs/grpo.yaml) is the ~40–80 GB, group-size-8 default):
+QLoRA (4-bit NF4) on Qwen3-4B fits a **24 GB** card (RTX 4090 / A6000-tier) with reduced group size
+(2–4), vLLM sleep-mode, and tighter tool-output caps; **40–48 GB** is comfortable for group size 6–8;
+80 GB is not required. **GPU-hours are TBD (pending run)** — multi-turn 4B rollout is
+generation-bound, so wall-clock will be measured on the first short run and extrapolated rather than
+guessed (the plan's 30–60 GPU-hr estimate is a starting point, not a claim).
+
+_Later phases (Integration, Report) are described in `PROJECT_PLAN.md` and will be filled in here as
+they complete._
