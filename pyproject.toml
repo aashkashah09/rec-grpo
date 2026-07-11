@@ -36,19 +36,28 @@ analysis = [       # report tables + frontier / calibration figures
 ml = [             # optional DR outcome-model variant (numpy ridge is the default)
   "scikit-learn>=1.4",
 ]
-# Phase 3 (GRPO specialist training — GPU only, never installed in CI). Pins are intentionally
-# loose here; the exact TRL/vLLM/transformers versions are locked on the GPU box when it is
-# provisioned (TRL's agentic surface moves fast — re-verify GRPOConfig/rollout_func names then).
-training = [
+# Phase 3 (GRPO specialist training). Two extras, neither installed in CI. Pins are intentionally
+# loose; the exact TRL/vLLM/transformers versions are locked on the GPU box when it is provisioned
+# (TRL's agentic surface moves fast — re-verify GRPOConfig/rollout_func names then).
+#
+# training-cpu: torch/trl/peft/transformers only — no vllm, no bitsandbytes — so it installs on
+# macOS/CPU (vllm and bitsandbytes ship no macOS/arm64 wheels). Enough to run the tiny-real CPU
+# trainer dry-run (`make grpo-dryrun`) locally before renting a GPU. See ADR-014.
+training-cpu = [
   "torch>=2.3",
   "trl>=1.0",
   "peft>=0.11",
   "transformers>=4.44",
-  "vllm>=0.5",
-  "bitsandbytes>=0.43",
   "accelerate>=0.30",
   "datasets>=2.19",
   "wandb>=0.17",
+]
+# training: the full GPU stack = training-cpu plus vllm (fast rollout generation) and bitsandbytes
+# (4-bit NF4 QLoRA). GPU box only.
+training = [
+  "specialist-router[training-cpu]",
+  "vllm>=0.5",
+  "bitsandbytes>=0.43",
 ]
 
 [build-system]

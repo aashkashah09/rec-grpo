@@ -5740,6 +5740,15 @@ training = [
     { name = "vllm" },
     { name = "wandb" },
 ]
+training-cpu = [
+    { name = "accelerate" },
+    { name = "datasets" },
+    { name = "peft" },
+    { name = "torch" },
+    { name = "transformers" },
+    { name = "trl" },
+    { name = "wandb" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -5754,26 +5763,27 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "accelerate", marker = "extra == 'training'", specifier = ">=0.30" },
+    { name = "accelerate", marker = "extra == 'training-cpu'", specifier = ">=0.30" },
     { name = "bitsandbytes", marker = "extra == 'training'", specifier = ">=0.43" },
-    { name = "datasets", marker = "extra == 'training'", specifier = ">=2.19" },
+    { name = "datasets", marker = "extra == 'training-cpu'", specifier = ">=2.19" },
     { name = "fastapi", marker = "extra == 'serving'", specifier = ">=0.110" },
     { name = "httpx", marker = "extra == 'serving'", specifier = ">=0.27" },
     { name = "matplotlib", marker = "extra == 'analysis'", specifier = ">=3.8" },
     { name = "numpy", specifier = ">=2.0" },
     { name = "pandas", marker = "extra == 'analysis'", specifier = ">=2.0" },
-    { name = "peft", marker = "extra == 'training'", specifier = ">=0.11" },
+    { name = "peft", marker = "extra == 'training-cpu'", specifier = ">=0.11" },
     { name = "pydantic", specifier = ">=2.7" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "scikit-learn", marker = "extra == 'ml'", specifier = ">=1.4" },
-    { name = "torch", marker = "extra == 'training'", specifier = ">=2.3" },
-    { name = "transformers", marker = "extra == 'training'", specifier = ">=4.44" },
-    { name = "trl", marker = "extra == 'training'", specifier = ">=1.0" },
+    { name = "specialist-router", extras = ["training-cpu"], marker = "extra == 'training'" },
+    { name = "torch", marker = "extra == 'training-cpu'", specifier = ">=2.3" },
+    { name = "transformers", marker = "extra == 'training-cpu'", specifier = ">=4.44" },
+    { name = "trl", marker = "extra == 'training-cpu'", specifier = ">=1.0" },
     { name = "uvicorn", marker = "extra == 'serving'", specifier = ">=0.29" },
     { name = "vllm", marker = "extra == 'training'", specifier = ">=0.5" },
-    { name = "wandb", marker = "extra == 'training'", specifier = ">=0.17" },
+    { name = "wandb", marker = "extra == 'training-cpu'", specifier = ">=0.17" },
 ]
-provides-extras = ["serving", "analysis", "ml", "training"]
+provides-extras = ["serving", "analysis", "ml", "training-cpu", "training"]
 
 [package.metadata.requires-dev]
 dev = [
