@@ -1,0 +1,68 @@
+[
+  {
+    "policy_name": "uniform",
+    "estimator": "doubly_robust",
+    "ope_point": 0.5111726038775324,
+    "ope_lo": 0.49236556614104976,
+    "ope_hi": 0.5305765597031947,
+    "realized_value": 0.5030201289407296,
+    "realized_n": 1500,
+    "inside_ci": true,
+    "abs_error": 0.008152474936802823
+  },
+  {
+    "policy_name": "epsilon_greedy",
+    "estimator": "doubly_robust",
+    "ope_point": 0.5843001974883226,
+    "ope_lo": 0.5640385362564605,
+    "ope_hi": 0.6054124153932385,
+    "realized_value": 0.5575185649770377,
+    "realized_n": 1500,
+    "inside_ci": false,
+    "abs_error": 0.02678163251128496
+  },
+  {
+    "policy_name": "linucb",
+    "estimator": "doubly_robust",
+    "ope_point": 0.5470187370766056,
+    "ope_lo": 0.5300475461268143,
+    "ope_hi": 0.5646471433730458,
+    "realized_value": 0.5327825344895558,
+    "realized_n": 1500,
+    "inside_ci": true,
+    "abs_error": 0.014236202587049829
+  },
+  {
+    "policy_name": "thompson_logistic",
+    "estimator": "doubly_robust",
+    "ope_point": 0.5833690087081457,
+    "ope_lo": 0.5641458473399388,
+    "ope_hi": 0.602889500528702,
+    "realized_value": 0.5654951506222307,
+    "realized_n": 1500,
+    "inside_ci": true,
+    "abs_error": 0.017873858085915018
+  },
+  {
+    "policy_name": "always_local",
+    "estimator": "doubly_robust",
+    "ope_point": 0.4431430724354151,
+    "ope_lo": 0.41108417557508775,
+    "ope_hi": 0.4764848111249732,
+    "realized_value": 0.45461045348403406,
+    "realized_n": 1500,
+    "inside_ci": true,
+    "abs_error": 0.011467381048618941
+  },
+  {
+    "policy_name": "always_api",
+    "estimator": "doubly_robust",
+    "ope_point": 0.5792021353196496,
+    "ope_lo": 0.5590072267145266,
+    "ope_hi": 0.5978168841563207,
+    "realized_value": 0.5687886838832353,
+    "realized_n": 1500,
+    "inside_ci": true,
+    "abs_error": 0.010413451436414256
+  }
+]

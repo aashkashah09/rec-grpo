@@ -1,0 +1,50 @@
+[
+  {
+    "policy": "uniform",
+    "mean_quality": 0.6693333333333333,
+    "mean_cost_usd": 0.009435342247065636,
+    "mean_latency_s": 2.5293172998267437,
+    "mean_reward": 0.5030201289407296,
+    "frac_api": 0.5006666666666667
+  },
+  {
+    "policy": "epsilon_greedy",
+    "mean_quality": 0.8086666666666666,
+    "mean_cost_usd": 0.0144720882155221,
+    "mean_latency_s": 3.6026091818216797,
+    "mean_reward": 0.5575185649770377,
+    "frac_api": 0.7853333333333333
+  },
+  {
+    "policy": "linucb",
+    "mean_quality": 0.7306666666666667,
+    "mean_cost_usd": 0.011316745757374302,
+    "mean_latency_s": 2.9045795531304806,
+    "mean_reward": 0.5327825344895558,
+    "frac_api": 0.604
+  },
+  {
+    "policy": "thompson_logistic",
+    "mean_quality": 0.822,
+    "mean_cost_usd": 0.01478114906864325,
+    "mean_latency_s": 3.6748889075738487,
+    "mean_reward": 0.5654951506222307,
+    "frac_api": 0.804
+  },
+  {
+    "policy": "always_local",
+    "mean_quality": 0.474,
+    "mean_cost_usd": 0.0007960468404966138,
+    "mean_latency_s": 0.5959075126813329,
+    "mean_reward": 0.45461045348403406,
+    "frac_api": 0.0
+  },
+  {
+    "policy": "always_api",
+    "mean_quality": 0.8826666666666667,
+    "mean_cost_usd": 0.018109266721478404,
+    "mean_latency_s": 4.432355983243148,
+    "mean_reward": 0.5687886838832353,
+    "frac_api": 1.0
+  }
+]
