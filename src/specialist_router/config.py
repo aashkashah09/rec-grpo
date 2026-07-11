@@ -1,6 +1,6 @@
 """The single typed configuration module for the project.
 
-`CLAUDE.md` mandates that no experiment constant lives in code — everything flows through
+`CONVENTIONS.md` mandates that no experiment constant lives in code — everything flows through
 ``configs/*.yaml`` loaded here into validated, typed models. Every run takes ``--config``
 and ``--seed``; ``load_config`` centralises that contract (and the seed override) so no other
 module ever parses YAML or reaches for a raw dict.

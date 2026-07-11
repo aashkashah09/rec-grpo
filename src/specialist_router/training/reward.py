@@ -6,7 +6,7 @@ deliberate choices (ADR-011):
 * **Correctness is the deterministic verifier's verdict** (``Verdict.correct``) — the same pure
   verifier used everywhere else in the project. There is no LLM judge and no trajectory-level
   importance sampling: this is a per-episode scalar reward that GRPO turns into a group-relative
-  advantage (``CLAUDE.md`` rule #2 / PROJECT_PLAN §1.2).
+  advantage (``CONVENTIONS.md`` rule #2 / PROJECT_PLAN §1.2).
 * **The format term is small** (``w_format`` ≪ ``w_correct``). It rewards well-formed tool use and,
   crucially, keeps a nonzero gradient when a whole GRPO group is all-correct or all-wrong (binary
   reward → ~0 advantage); it is intentionally too small to prefer a well-formatted wrong answer

@@ -14,10 +14,10 @@ under-specified; this ADR records the decisions taken so reviewers can see the r
 ## Decisions
 
 1. **`uv` for dependency management, installed via the official installer.** Mandated by
-   `CLAUDE.md`. `pyproject.toml` is the single source of deps (no `requirements.txt`); a
+   `CONVENTIONS.md`. `pyproject.toml` is the single source of deps (no `requirements.txt`); a
    `uv.lock` is committed for reproducible CI.
 
-2. **Python floor 3.11.** The minimum `CLAUDE.md` allows, and the widest-compatible target
+2. **Python floor 3.11.** The minimum `CONVENTIONS.md` allows, and the widest-compatible target
    for the GPU/cloud images used in Phase 3. ruff and mypy target `py311`.
 
 3. **Heavy ML deps are deferred, not installed in Phase 0.** `torch`, `trl`, `peft`,
@@ -30,7 +30,7 @@ under-specified; this ADR records the decisions taken so reviewers can see the r
 4. **Empty-but-documented package skeleton.** Every sub-package ships an `__init__.py` with a
    Google-style docstring naming its future responsibility and phase — but **no stub
    functions or classes**. This gives `mypy --strict` and `pytest` valid targets with zero
-   `type: ignore`, and avoids implementing ahead of the current phase (`CLAUDE.md` rule #4).
+   `type: ignore`, and avoids implementing ahead of the current phase (`CONVENTIONS.md` rule #4).
 
 5. **Honest Makefile stubs for future targets.** `setup`, `lint`, `test` are implemented.
    `generate-tasks`, `serve`, `traffic`, `ope`, `repro-phase2`, `eval`, `report` exist for
@@ -39,7 +39,7 @@ under-specified; this ADR records the decisions taken so reviewers can see the r
 
 6. **Config files are placeholders (`schema_version: 0`).** The five `configs/*.yaml` files
    exist with a header and version only. Real keys — notably the reward weights λ (cost) and
-   μ (latency) — are intentionally omitted; `CLAUDE.md` says to decide those with the user
+   μ (latency) — are intentionally omitted; `CONVENTIONS.md` says to decide those with the user
    rather than guess.
 
 7. **Single Phase-0 smoke test.** `tests/unit/test_smoke.py` asserts the package imports and

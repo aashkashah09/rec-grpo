@@ -110,7 +110,7 @@ Driven on CPU by a stub simulator (no GPU, no API), so the whole pipeline reprod
   ([`RouterDecision`](src/specialist_router/env/records.py), schema v2).
 - **OPE** ([`ope/`](src/specialist_router/ope/)) — IPS, SNIPS, direct method, and cross-fitted DR,
   with bootstrap CIs and ESS diagnostics — applied **only** to the single routing decision, never
-  to agent trajectories ([`CLAUDE.md`](CLAUDE.md) rule #2).
+  to agent trajectories ([`CONVENTIONS.md`](CONVENTIONS.md) rule #2).
 - **Replay-A/B** ([`ope/replay.py`](src/specialist_router/ope/replay.py)) — deploy each candidate
   on fresh traffic and compare realized value to the OPE prediction; realized and predicted rewards
   are asserted to be on the same λ/μ scale.
@@ -187,7 +187,7 @@ trace to a real W&B run.
   Correctness is the deterministic verifier verdict; the small format term keeps a gradient alive
   when a GRPO group is all-correct/all-wrong (binary-reward collapse) but is too small to beat a
   correct answer. GRPO turns `R` into a group-relative advantage — a training objective, **not**
-  trajectory-level OPE ([`CLAUDE.md`](CLAUDE.md) rule #2).
+  trajectory-level OPE ([`CONVENTIONS.md`](CONVENTIONS.md) rule #2).
 - **Env-coupled data** ([`training/data.py`](src/specialist_router/training/data.py)) — training
   tasks are generated from the environment, split into a deterministic template-balanced train /
   held-out partition (a task is on exactly one side), with a pass-rate curriculum that skips tasks

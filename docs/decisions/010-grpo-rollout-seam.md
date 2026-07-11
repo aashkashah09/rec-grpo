@@ -40,7 +40,7 @@ protocol). Overriding the private `_generate_and_score_completions` is no longer
    the primary failure mode; it is mitigated by the small nonzero format term, the pass-rate
    curriculum in `TaskSampler`, and a large-enough `num_generations`.
 
-## Scope note (CLAUDE.md rule #2 / PROJECT_PLAN §1.2)
+## Scope note (CONVENTIONS.md rule #2 / PROJECT_PLAN §1.2)
 
 GRPO's internal clipped token-level ratio is a **training objective**, not off-policy evaluation.
 There is no trajectory-level importance sampling of the agent anywhere: the specialist is evaluated

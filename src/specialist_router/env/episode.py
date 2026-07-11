@@ -1,6 +1,6 @@
 """The multi-turn episode loop: drive an agent over the tools under strict budgets.
 
-The loop owns the turn count and tool budget (``CLAUDE.md``: max 12 turns, tool budget) so no
+The loop owns the turn count and tool budget (``CONVENTIONS.md``: max 12 turns, tool budget) so no
 agent can exceed them, dispatches tool requests to the sandbox catching every sandbox error,
 and records a structured :class:`Trajectory`. Verification is deliberately a separate step
 (:func:`run_and_verify`) so the trust-critical verifier stays a pure function of

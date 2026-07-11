@@ -1,4 +1,4 @@
-# Pre-commit hooks enforce ruff (lint+format) and mypy per CLAUDE.md.
+# Pre-commit hooks enforce ruff (lint+format) and mypy per CONVENTIONS.md.
 # Install with `make setup` (runs `uv run pre-commit install`).
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

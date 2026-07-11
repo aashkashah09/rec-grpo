@@ -6,7 +6,7 @@
 
 ## Context
 
-`CLAUDE.md` requires the training reward to be the Phase-1 deterministic verifier plus a small
+`CONVENTIONS.md` requires the training reward to be the Phase-1 deterministic verifier plus a small
 format/tool-compliance reward, and that reward weights be decided with the user, not guessed
 (cf. ADR-007 for the *routing* reward). The training reward is a distinct quantity from the routing
 reward (`router/reward.py`, `quality − λ·cost − μ·latency`) and lives in `training/reward.py`.

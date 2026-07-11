@@ -6,7 +6,7 @@
 
 ## Context
 
-Phase 3 introduces GPU-only code (TRL/torch/peft/vLLM/wandb). `CLAUDE.md` requires that no test call
+Phase 3 introduces GPU-only code (TRL/torch/peft/vLLM/wandb). `CONVENTIONS.md` requires that no test call
 external APIs or need a GPU by default, that CI stay CPU-only, and (ADR-000) that heavy ML deps stay
 out of the CI lock. The user also required a CPU dry-run that exercises the full pipeline
 (rollout→verify→reward→trainer step) to validate the wiring before renting hardware.

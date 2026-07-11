@@ -1,6 +1,6 @@
 """Deterministic, value-based verification of submitted answers against ground truth.
 
-The verifier never inspects model prose (``CLAUDE.md`` hard rule #3): it receives a typed
+The verifier never inspects model prose (``CONVENTIONS.md`` hard rule #3): it receives a typed
 answer value (produced by the ``final_answer`` tool) and compares it to the programmatic
 ground truth under a per-answer-type tolerance. A malformed *submitted* answer yields an
 incorrect verdict (the agent's fault); a malformed *expected* value raises (our bug) — the

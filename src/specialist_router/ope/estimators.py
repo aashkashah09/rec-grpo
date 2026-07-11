@@ -1,6 +1,6 @@
 """Off-policy estimators for the single routing decision: IPS, SNIPS, the direct method, and DR.
 
-**Scope (``CLAUDE.md`` rule #2 / ``PROJECT_PLAN`` §1.2):** every estimator here evaluates the
+**Scope (``CONVENTIONS.md`` rule #2 / ``PROJECT_PLAN`` §1.2):** every estimator here evaluates the
 *routing decision alone* — one context, one arm, one scalar reward. There is no trajectory-level
 importance sampling of the agent's tool-use rollout, and none must ever be added. The unit of
 analysis is a :class:`~specialist_router.router.logger.LoggedDataset` row.

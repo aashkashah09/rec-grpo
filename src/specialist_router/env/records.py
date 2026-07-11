@@ -119,7 +119,7 @@ class SftDemo(BaseModel):
     ``final_answer`` and ``template_id`` are retained for auditing and per-template demo balance.
 
     Scope note: this is a *demonstration* record for SFT only. It carries no propensities and is
-    never used by OPE — it is not a routing decision (``CLAUDE.md`` rule #2).
+    never used by OPE — it is not a routing decision (``CONVENTIONS.md`` rule #2).
     """
 
     schema_version: int = Field(default=SCHEMA_VERSION)
@@ -150,7 +150,7 @@ class RouterDecision(BaseModel):
       ``cost_ref_usd``, ``latency_ref_s``) so the composite reward is recomputable and a replay
       can assert it is on the same scale as the OPE it validates.
 
-    Scope note (``CLAUDE.md`` rule #2): this record is the routing decision only. There is no
+    Scope note (``CONVENTIONS.md`` rule #2): this record is the routing decision only. There is no
     per-turn or trajectory-level importance weighting of the agent's tool-use rollout anywhere.
     """
 

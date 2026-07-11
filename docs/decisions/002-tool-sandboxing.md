@@ -6,7 +6,7 @@
 
 ## Context
 
-`CLAUDE.md` hard rule #5 requires that `run_sql` use a read-only connection with a statement
+`CONVENTIONS.md` hard rule #5 requires that `run_sql` use a read-only connection with a statement
 allow-list and row/time limits, and that `python_calc` never `eval`/`exec` model text — it must
 use a restricted numeric-expression parser. A model's output is untrusted input.
 

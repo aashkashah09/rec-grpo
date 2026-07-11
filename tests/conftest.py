@@ -31,8 +31,8 @@ _MINI_CONFIG = _ROOT / "configs" / "env.mini.yaml"
 _CONFIGS = _ROOT / "configs"
 
 # Markers for tests that need resources CI does not have (a GPU, an external API, or the heavy
-# 'training' extra). They are skipped unless explicitly selected with ``-m <marker>`` (per CLAUDE.md
-# "skipped by default and in CI").
+# 'training' extra). They are skipped unless explicitly selected with ``-m <marker>``
+# (per CONVENTIONS.md "skipped by default and in CI").
 _GATED_MARKERS = ("gpu", "external", "training")
 
 

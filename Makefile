@@ -1,4 +1,4 @@
-# Makefile — repro targets per CLAUDE.md. Tooling runs through `uv run`.
+# Makefile — repro targets per CONVENTIONS.md. Tooling runs through `uv run`.
 # Phase 0 implements: setup, lint, test. Later-phase targets are honest stubs
 # that fail loudly rather than pretend to work (no fabricated capability).
 

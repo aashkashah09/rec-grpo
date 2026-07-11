@@ -8,7 +8,7 @@
 
 PROJECT_PLAN §3 allows an optional SFT warmup (500–1500 tool-format demos) if the base model's
 tool-format compliance is below ~60%, generated via the frontier API. It must be kept clearly
-separate from the RL run, and `CLAUDE.md` requires care around anything that spends money.
+separate from the RL run, and `CONVENTIONS.md` requires care around anything that spends money.
 
 ## Decision
 

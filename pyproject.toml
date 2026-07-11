@@ -73,7 +73,7 @@ dev = [
 ]
 
 # ----------------------------------------------------------------------------
-# ruff: lint + format. Line length 100 per CLAUDE.md.
+# ruff: lint + format. Line length 100 per CONVENTIONS.md.
 # ----------------------------------------------------------------------------
 [tool.ruff]
 line-length = 100
@@ -108,7 +108,7 @@ convention = "google"
 docstring-code-format = true
 
 # ----------------------------------------------------------------------------
-# mypy: strict on src/ per CLAUDE.md.
+# mypy: strict on src/ per CONVENTIONS.md.
 # ----------------------------------------------------------------------------
 [tool.mypy]
 python_version = "3.11"
@@ -143,7 +143,7 @@ ignore_missing_imports = true
 
 # ----------------------------------------------------------------------------
 # pytest: markers for gpu/external are declared and skipped-by-default in CI
-# per CLAUDE.md (no test may call external APIs or require a GPU by default).
+# per CONVENTIONS.md (no test may call external APIs or require a GPU by default).
 # ----------------------------------------------------------------------------
 [tool.pytest.ini_options]
 minversion = "8.0"
