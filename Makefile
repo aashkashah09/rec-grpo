@@ -31,20 +31,34 @@ test:  ## Run the pytest suite (CPU-only; gpu/external markers skipped).
 generate-tasks:  ## [Phase 1] Emit tasks + ground truth as JSONL (and the backing SQLite DB).
 	uv run python scripts/generate_tasks.py --config $(CONFIG) --seed $(SEED) --out $(OUT) --db $(DB)
 
-serve:  ## [Phase 2] Launch the FastAPI /solve service.
-	@echo "serve: not implemented until Phase 2" && exit 1
+# Phase-2 defaults (override on the command line, e.g. `make traffic N=5000`).
+ENV_CONFIG     ?= configs/env.mini.yaml
+ROUTER_CONFIG  ?= configs/router.yaml
+OPE_CONFIG     ?= configs/ope.yaml
+SERVING_CONFIG ?= configs/serving.yaml
+N              ?= 2000
+DECISIONS      ?= build/phase2/decisions.jsonl
 
-traffic:  ## [Phase 2] Send logging-policy traffic through the service.
-	@echo "traffic: not implemented until Phase 2" && exit 1
+serve:  ## [Phase 2] Launch the FastAPI /solve service (needs the 'serving' extra).
+	uv run python scripts/serve.py --env-config $(ENV_CONFIG) --router-config $(ROUTER_CONFIG) \
+		--serving-config $(SERVING_CONFIG)
 
-ope:  ## [Phase 2] Run IPS/SNIPS/DR estimators over logged decisions.
-	@echo "ope: not implemented until Phase 2" && exit 1
+traffic:  ## [Phase 2] Generate Uniform-logging-policy traffic (stub backend) as decisions JSONL.
+	uv run python scripts/run_traffic.py --env-config $(ENV_CONFIG) --router-config $(ROUTER_CONFIG) \
+		--serving-config $(SERVING_CONFIG) --n $(N) --out $(DECISIONS)
 
-repro-phase2:  ## [Phase 2] traffic -> OPE -> replay from committed logs.
-	@echo "repro-phase2: not implemented until Phase 2" && exit 1
+ope:  ## [Phase 2] Run IPS/SNIPS/DR/DM estimators (+ bootstrap CIs) over logged decisions.
+	uv run python scripts/run_ope.py --decisions $(DECISIONS) --router-config $(ROUTER_CONFIG) \
+		--ope-config $(OPE_CONFIG)
 
-eval:  ## [Phase 2/4] Held-out task-success + frontier curve.
-	@echo "eval: not implemented until Phase 2" && exit 1
+repro-phase2:  ## [Phase 2] Full CPU repro: traffic -> OPE -> replay-A/B -> breakage -> tables/figures.
+	uv run python scripts/repro_phase2.py --env-config $(ENV_CONFIG) --router-config $(ROUTER_CONFIG) \
+		--ope-config $(OPE_CONFIG) --serving-config $(SERVING_CONFIG)
+
+eval:  ## [Phase 2/4] Regenerate the cost/quality frontier figure from committed artifacts.
+	uv run python -c "import json; from specialist_router.analysis import plots; \
+		plots.plot_frontier(json.load(open('artifacts/phase2/frontier.json')), 'artifacts/phase2/frontier.png'); \
+		print('wrote artifacts/phase2/frontier.png')"
 
 report:  ## [Phase 5] Generate report tables/figures from artifacts.
 	@echo "report: not implemented until Phase 5" && exit 1
