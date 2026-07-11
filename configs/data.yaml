@@ -1,0 +1,27 @@
+# Amazon Product Reviews (2014 dump), Beauty category.
+# The 5-core review file is already k-core filtered upstream; the filter is
+# re-applied here so the catalog and the interaction table cannot drift apart
+# after metadata joins.
+
+dataset: beauty
+raw_dir: data/raw
+processed_dir: data/processed
+
+reviews_url: http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/reviews_Beauty_5.json.gz
+metadata_url: http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/meta_Beauty.json.gz
+
+k_core: 5
+min_timestamp: null          # keep the full history
+drop_duplicate_pairs: true   # one (user, item) edge, earliest timestamp wins
+
+split:
+  # Global temporal split: one timeline for the whole dataset, cut by
+  # interaction count. Not leave-one-out -- a user's later interactions may
+  # fall in validation or test while their earlier ones stay in train.
+  mode: global_temporal
+  val_frac: 0.1
+  test_frac: 0.1
+  tie_break: [timestamp, user_id, item_id]
+
+text_fields: [title, brand, categories, description]
+max_description_chars: 512
