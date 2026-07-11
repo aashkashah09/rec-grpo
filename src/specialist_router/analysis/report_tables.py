@@ -82,6 +82,32 @@ def frontier_table(rows: Sequence[dict[str, object]]) -> str:
     return markdown_table(headers, body) + "\n\n" + _STUB_CAPTION
 
 
+def lambda_mu_sweep_table(rows: Sequence[dict[str, object]]) -> str:
+    """Format the λ/μ sweep: DR of the best learned router vs always_api per grid cell."""
+    headers = [
+        "λ",
+        "μ",
+        "always_api DR",
+        "best learned DR",
+        "winner",
+        "margin",
+        "learned wins?",
+    ]
+    body = [
+        [
+            _f(row["lambda"], 2),
+            _f(row["mu"], 2),
+            _f(row["dr_always_api"]),
+            _f(row["best_learned_dr"]),
+            row["best_learned_policy"],
+            _f(row["margin_vs_api"]),
+            "yes" if row["learned_beats_api"] else "no",
+        ]
+        for row in rows
+    ]
+    return markdown_table(headers, body) + "\n\n" + _STUB_CAPTION
+
+
 def breakage_table(rows: Sequence[dict[str, object]]) -> str:
     """Format the estimator-breakage study table (bias/variance vs shrinking overlap)."""
     headers = [

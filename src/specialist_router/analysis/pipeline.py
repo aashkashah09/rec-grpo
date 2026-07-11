@@ -8,7 +8,7 @@ real-model numbers arrive in Phase 4.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 
@@ -205,6 +205,63 @@ def run_breakage_study(ope: OpeConfig, n: int = 4000, n_seeds: int = 20) -> list
                 "mean_ess_fraction": float(np.mean(ess_fracs)),
             }
         )
+    return rows
+
+
+_LEARNED = ("epsilon_greedy", "linucb", "thompson_logistic")
+
+
+def run_lambda_mu_sweep(
+    decisions: list[RouterDecision],
+    router: RouterConfig,
+    ope: OpeConfig,
+    lambdas: list[float],
+    mus: list[float],
+) -> list[dict[str, object]]:
+    """Re-score the *existing* logs across a (λ, μ) grid and compare learned routers to always_api.
+
+    The reward is a post-hoc function of the logged components, so no new traffic is needed: for
+    each grid cell we recompute ``reward = quality − λ·cost_norm − μ·latency_norm`` from the logged
+    ``cost_norm``/``latency_norm``, **refit** the learned policies under that reward (they optimise
+    the objective they are scored against), and off-policy-evaluate every policy by DR. This
+    surfaces the (λ, μ) regime where a learned router's DR value exceeds always_api's.
+    """
+    base = LoggedDataset.from_decisions(decisions)
+    rows: list[dict[str, object]] = []
+    for lam in lambdas:
+        for mu in mus:
+            reward = base.quality - lam * base.cost_norm - mu * base.latency_norm
+            data = replace(base, reward=reward)
+            cell_router = router.model_copy(
+                update={
+                    "reward": router.reward.model_copy(
+                        update={"lambda_cost": lam, "mu_latency": mu}
+                    )
+                }
+            )
+            policies = build_target_policies(cell_router, data)
+            dr = {
+                name: evaluate_policy(data, policy, ope).doubly_robust
+                for name, policy in policies.items()
+            }
+            best_name = max(_LEARNED, key=lambda n: dr[n])
+            best_learned = dr[best_name]
+            always_api = dr["always_api"]
+            rows.append(
+                {
+                    "lambda": float(lam),
+                    "mu": float(mu),
+                    "dr_epsilon_greedy": dr["epsilon_greedy"],
+                    "dr_linucb": dr["linucb"],
+                    "dr_thompson_logistic": dr["thompson_logistic"],
+                    "dr_always_api": always_api,
+                    "dr_always_local": dr["always_local"],
+                    "best_learned_policy": best_name,
+                    "best_learned_dr": best_learned,
+                    "margin_vs_api": best_learned - always_api,
+                    "learned_beats_api": bool(best_learned > always_api),
+                }
+            )
     return rows
 
 

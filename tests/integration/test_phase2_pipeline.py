@@ -6,6 +6,7 @@ from specialist_router.analysis import report_tables
 from specialist_router.analysis.pipeline import (
     generate_traffic,
     run_breakage_study,
+    run_lambda_mu_sweep,
     run_ope,
     run_replay,
 )
@@ -72,6 +73,21 @@ def test_frontier_orders_arms_by_cost(
     # always_api is both higher quality and more expensive than always_local.
     assert frontier["always_api"]["mean_quality"] > frontier["always_local"]["mean_quality"]
     assert frontier["always_api"]["mean_cost_usd"] > frontier["always_local"]["mean_cost_usd"]
+
+
+def test_lambda_mu_sweep_favors_learned_at_high_cost_weight(
+    env_config: Config,
+    router_config: RouterConfig,
+    ope_config: OpeConfig,
+    serving_config: ServingConfig,
+) -> None:
+    logged = generate_traffic(env_config, router_config, serving_config, n_tasks=320, seed=5)
+    rows = run_lambda_mu_sweep(logged, router_config, ope_config, [0.0, 1.0], [0.0])
+    by_lambda = {row["lambda"]: row for row in rows}
+    # At lambda=0 (quality only) always_api is hard to beat; at lambda=1 the cost penalty makes the
+    # learned router clearly better on reward. The margin must increase with the cost weight.
+    assert float(by_lambda[1.0]["margin_vs_api"]) > float(by_lambda[0.0]["margin_vs_api"])
+    assert by_lambda[1.0]["learned_beats_api"] is True
 
 
 def test_breakage_study_shows_ips_variance_growth(ope_config: OpeConfig) -> None:
