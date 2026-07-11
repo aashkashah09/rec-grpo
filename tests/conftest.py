@@ -7,7 +7,16 @@ from pathlib import Path
 
 import pytest
 
-from specialist_router.config import Config, load_config
+from specialist_router.config import (
+    Config,
+    OpeConfig,
+    RouterConfig,
+    ServingConfig,
+    load_config,
+    load_ope_config,
+    load_router_config,
+    load_serving_config,
+)
 from specialist_router.env.database import (
     Dataset,
     load_dataset_from_connection,
@@ -19,12 +28,31 @@ from specialist_router.env.tasks import EnvIndex
 _ROOT = Path(__file__).resolve().parent.parent
 _FIXTURE_SQL = _ROOT / "tests" / "fixtures" / "mini_db.sql"
 _MINI_CONFIG = _ROOT / "configs" / "env.mini.yaml"
+_CONFIGS = _ROOT / "configs"
 
 
 @pytest.fixture
 def env_config() -> Config:
     """The mini environment config (used for tolerances and tool limits)."""
     return load_config(_MINI_CONFIG)
+
+
+@pytest.fixture
+def router_config() -> RouterConfig:
+    """The Phase-2 router config (reward weights, featurizer, policies)."""
+    return load_router_config(_CONFIGS / "router.yaml")
+
+
+@pytest.fixture
+def ope_config() -> OpeConfig:
+    """The Phase-2 OPE config (estimators, bootstrap, DR outcome model)."""
+    return load_ope_config(_CONFIGS / "ope.yaml")
+
+
+@pytest.fixture
+def serving_config() -> ServingConfig:
+    """The Phase-2 serving config (stub arm profiles)."""
+    return load_serving_config(_CONFIGS / "serving.yaml")
 
 
 @pytest.fixture
