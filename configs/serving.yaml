@@ -1,3 +1,46 @@
-# Serving config — Phase 2 (vLLM + API endpoints, timeouts, budgets).
-# Placeholder only in Phase 0.
-schema_version: 0
+# Serving config — Phase 2 (agents + FastAPI /solve backend).
+# Loaded through src/specialist_router/config.py.
+#
+# backend: "stub" is the CPU-friendly simulator used for ALL Phase-2 numbers, repro-phase2, and
+# CI — no GPU and no API spend. Every artifact produced with it is labeled stub/CPU-simulator;
+# real-model numbers arrive in Phase 4 with backend: "real".
+schema_version: 1
+seed: 20260711
+backend: stub
+
+# Simulated arms. The frontier "api" arm is stronger but pricier and slower; the "local" arm is
+# cheap and fast but weaker (and, until Phase 3, weakest on hard tasks) — so routing is non-trivial
+# and the router has something to learn from the difficulty proxies in the features.
+stub:
+  local:
+    base_quality: 0.72        # P(correct) on an easy task
+    difficulty_penalty: 0.22  # subtracted per difficulty level (easy=0, med=1, hard=2)
+    cost_usd_mean: 0.0008
+    cost_usd_std: 0.0002
+    latency_s_mean: 0.6
+    latency_s_std: 0.15
+  api:
+    base_quality: 0.95
+    difficulty_penalty: 0.06
+    cost_usd_mean: 0.018
+    cost_usd_std: 0.004
+    latency_s_mean: 4.5
+    latency_s_std: 1.0
+
+# Real endpoints (Phase 4; unused while backend: stub). Keys resolved from env, never inlined.
+local_endpoint: null
+# local_endpoint:
+#   base_url: "http://localhost:8000/v1"   # vLLM OpenAI-compatible server
+#   model: "Qwen/Qwen3-4B-Instruct"
+#   api_key_env: null
+#   price_prompt_per_1k_usd: 0.0
+#   price_completion_per_1k_usd: 0.0
+#   timeout_s: 60.0
+api_endpoint: null
+# api_endpoint:
+#   base_url: "https://api.anthropic.com/v1"
+#   model: "claude-haiku-4-5"
+#   api_key_env: "ANTHROPIC_API_KEY"
+#   price_prompt_per_1k_usd: 0.001
+#   price_completion_per_1k_usd: 0.005
+#   timeout_s: 60.0

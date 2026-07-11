@@ -1,3 +1,14 @@
-# OPE config — Phase 2 (estimator settings, bootstrap CI params, ESS diagnostics).
-# Placeholder only in Phase 0.
-schema_version: 0
+# OPE config — Phase 2 (IPS / SNIPS / DR / direct-method, bootstrap CIs, ESS diagnostics).
+# All estimators apply ONLY to the single routing decision (CLAUDE.md rule #2); never to agent
+# trajectories. Loaded through src/specialist_router/config.py.
+schema_version: 1
+seed: 20260711
+
+n_bootstrap: 1000       # bootstrap resamples for the confidence intervals
+ci_alpha: 0.05          # -> 95% CIs
+weight_clip: null       # optional IPS weight cap; null = unclipped (Uniform logging keeps weights <= 2)
+
+dr:
+  reward_model: ridge   # "ridge" (numpy, default/CI) or "gbm" (needs scikit-learn extra)
+  ridge_lambda: 1.0
+  n_folds: 5            # cross-fitting folds so the DR outcome model is out-of-fold
