@@ -30,6 +30,7 @@ wandb/
 *.db
 outputs/
 checkpoints/
+build/
 
 # OS / editor
 .DS_Store
