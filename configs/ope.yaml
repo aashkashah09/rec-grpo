@@ -1,5 +1,5 @@
 # OPE config — Phase 2 (IPS / SNIPS / DR / direct-method, bootstrap CIs, ESS diagnostics).
-# All estimators apply ONLY to the single routing decision (CLAUDE.md rule #2); never to agent
+# All estimators apply ONLY to the single routing decision (CONVENTIONS.md rule #2); never to agent
 # trajectories. Loaded through src/specialist_router/config.py.
 schema_version: 1
 seed: 20260711

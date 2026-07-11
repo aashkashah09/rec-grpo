@@ -8,7 +8,7 @@
 
 Phase 2 evaluates candidate routing policies off-policy from Uniform-logged data (IPS/SNIPS/DR +
 direct method, bootstrap CIs, ESS), validated by replay-A/B, with a "when estimators break"
-mini-study (`PROJECT_PLAN.md` §3). `CLAUDE.md` rule #2 hard-limits the scope.
+mini-study (`PROJECT_PLAN.md` §3). `CONVENTIONS.md` rule #2 hard-limits the scope.
 
 ## Decisions
 

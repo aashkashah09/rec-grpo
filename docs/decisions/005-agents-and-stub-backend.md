@@ -9,7 +9,7 @@
 Phase 2 needs the two routing arms — `api_agent` (frontier) and `local_agent` (vLLM-served small
 model) — but must be fully buildable, testable, and reproducible **without a GPU or any API spend**
 (`PROJECT_PLAN.md` §3: "or an API-served small model as CPU-friendly fallback"). CI may not call
-external APIs or require a GPU (`CLAUDE.md`).
+external APIs or require a GPU (`CONVENTIONS.md`).
 
 ## Decisions
 
@@ -36,7 +36,7 @@ external APIs or require a GPU (`CLAUDE.md`).
 
 `agents/chat_agent.py` (shared tool-calling agent), `agents/metering.py` (token→USD cost),
 `serving/service.py` (the `RouterService` core + arm runners). `serving/clients.py` and
-`serving/app.py` are in the planned layout. These are recorded here per `CLAUDE.md`.
+`serving/app.py` are in the planned layout. These are recorded here per `CONVENTIONS.md`.
 
 ## Consequences
 

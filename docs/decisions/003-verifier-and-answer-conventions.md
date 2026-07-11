@@ -6,7 +6,7 @@
 
 ## Context
 
-`CLAUDE.md` hard rule #3: verification is deterministic value comparison with tolerance, never
+`CONVENTIONS.md` hard rule #3: verification is deterministic value comparison with tolerance, never
 prose string-matching. The templates need unambiguous answer units, and the ground truth needs
 to be trustworthy. Two conventions were confirmed with the user.
 

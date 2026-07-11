@@ -12,7 +12,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 """Bump when any record shape below changes in a backwards-incompatible way.
 
 Version history:
@@ -20,6 +20,8 @@ Version history:
 * 2 — Phase 2: adds :class:`RouterDecision` (propensity-logged routing decisions). Existing
   Phase-1 records are unchanged in shape; committed v1 artifacts remain readable because every
   record self-describes its ``schema_version``.
+* 3 — Phase 3: adds :class:`SftDemo` (a verifier-correct tool-use episode used for the optional
+  SFT warmup). Existing v1/v2 records are unchanged in shape.
 """
 
 Difficulty = Literal["easy", "med", "hard"]
@@ -107,6 +109,30 @@ class Verdict(BaseModel):
     tolerance: dict[str, float]
 
 
+class SftDemo(BaseModel):
+    """One supervised-fine-tuning demonstration: a full, verifier-correct tool-use episode.
+
+    Produced by the optional SFT warmup (``training.sft_warmup``) from the Phase-2 frontier
+    ``api_agent`` and kept only when the deterministic verifier marks the episode correct, so the
+    warmup teaches *correct* tool use, not merely well-formed tool use. ``messages`` is the exact
+    OpenAI-style chat transcript (system / user / assistant / tool turns) the SFT trainer tokenizes;
+    ``final_answer`` and ``template_id`` are retained for auditing and per-template demo balance.
+
+    Scope note: this is a *demonstration* record for SFT only. It carries no propensities and is
+    never used by OPE — it is not a routing decision (``CONVENTIONS.md`` rule #2).
+    """
+
+    schema_version: int = Field(default=SCHEMA_VERSION)
+    demo_id: str
+    task_id: str
+    template_id: str
+    difficulty: Difficulty
+    messages: list[dict[str, str]]
+    final_answer: AnswerValue
+    source_agent: str
+    seed: int
+
+
 class RouterDecision(BaseModel):
     """One propensity-logged routing decision — the single unit OPE evaluates.
 
@@ -124,7 +150,7 @@ class RouterDecision(BaseModel):
       ``cost_ref_usd``, ``latency_ref_s``) so the composite reward is recomputable and a replay
       can assert it is on the same scale as the OPE it validates.
 
-    Scope note (``CLAUDE.md`` rule #2): this record is the routing decision only. There is no
+    Scope note (``CONVENTIONS.md`` rule #2): this record is the routing decision only. There is no
     per-turn or trajectory-level importance weighting of the agent's tool-use rollout anywhere.
     """
 

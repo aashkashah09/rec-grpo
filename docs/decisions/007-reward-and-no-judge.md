@@ -6,7 +6,7 @@
 
 ## Context
 
-The routing reward is `quality − λ·cost − μ·latency` (`PROJECT_PLAN.md` §3). `CLAUDE.md` says the
+The routing reward is `quality − λ·cost − μ·latency` (`PROJECT_PLAN.md` §3). `CONVENTIONS.md` says the
 reward weights are decided with the user, not guessed, and the plan calls for a "calibrated
 LLM-judge fallback where verifier N/A." Both points were resolved with the user before coding.
 
@@ -25,7 +25,7 @@ LLM-judge fallback where verifier N/A." Both points were resolved with the user 
    `RouterDecision` so any re-scoring is reproducible.
 4. **No LLM-judge in Phase 2 (user-approved deviation from the plan wording).** All eight templates
    have deterministic verifiers, so `quality` is always the verifier verdict. Implementing an
-   unused judge would add complexity that outruns the artifacts (`CLAUDE.md`). We instead document
+   unused judge would add complexity that outruns the artifacts (`CONVENTIONS.md`). We instead document
    the seam: quality would flow through a `quality_source: verifier | judge` switch; a judge, if
    ever needed for a free-form template, would be **calibrated against verifier labels on a held-out
    split (reporting agreement + Cohen's κ) and gated behind `@pytest.mark.external`**. It is left

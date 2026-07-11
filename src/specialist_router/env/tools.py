@@ -1,6 +1,6 @@
 """Hard-sandboxed tools exposed to agents: ``inspect_schema``, ``run_sql``, ``python_calc``.
 
-These are trust-critical (``CLAUDE.md`` hard rule #5): a model's output must never be able to
+These are trust-critical (``CONVENTIONS.md`` hard rule #5): a model's output must never be able to
 mutate the database, read the filesystem, or execute arbitrary Python. Defenses are layered so
 no single mechanism is load-bearing:
 

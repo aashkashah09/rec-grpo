@@ -36,9 +36,28 @@ analysis = [       # report tables + frontier / calibration figures
 ml = [             # optional DR outcome-model variant (numpy ridge is the default)
   "scikit-learn>=1.4",
 ]
-# Phase 3 (GRPO specialist training — GPU only, never in CI):
+# Phase 3 (GRPO specialist training). Two extras, neither installed in CI. Pins are intentionally
+# loose; the exact TRL/vLLM/transformers versions are locked on the GPU box when it is provisioned
+# (TRL's agentic surface moves fast — re-verify GRPOConfig/rollout_func names then).
+#
+# training-cpu: torch/trl/peft/transformers only — no vllm, no bitsandbytes — so it installs on
+# macOS/CPU (vllm and bitsandbytes ship no macOS/arm64 wheels). Enough to run the tiny-real CPU
+# trainer dry-run (`make grpo-dryrun`) locally before renting a GPU. See ADR-014.
+training-cpu = [
+  "torch>=2.3",
+  "trl>=1.0",
+  "peft>=0.11",
+  "transformers>=4.44",
+  "accelerate>=0.30",
+  "datasets>=2.19",
+  "wandb>=0.17",
+]
+# training: the full GPU stack = training-cpu plus vllm (fast rollout generation) and bitsandbytes
+# (4-bit NF4 QLoRA). GPU box only.
 training = [
-  # "torch", "trl", "peft", "transformers", "vllm", "wandb", "datasets"
+  "specialist-router[training-cpu]",
+  "vllm>=0.5",
+  "bitsandbytes>=0.43",
 ]
 
 [build-system]
@@ -63,7 +82,7 @@ dev = [
 ]
 
 # ----------------------------------------------------------------------------
-# ruff: lint + format. Line length 100 per CLAUDE.md.
+# ruff: lint + format. Line length 100 per CONVENTIONS.md.
 # ----------------------------------------------------------------------------
 [tool.ruff]
 line-length = 100
@@ -98,7 +117,7 @@ convention = "google"
 docstring-code-format = true
 
 # ----------------------------------------------------------------------------
-# mypy: strict on src/ per CLAUDE.md.
+# mypy: strict on src/ per CONVENTIONS.md.
 # ----------------------------------------------------------------------------
 [tool.mypy]
 python_version = "3.11"
@@ -119,12 +138,21 @@ module = [
   "matplotlib.*",
   "sklearn.*",
   "sentence_transformers.*",
+  # Phase-3 training extra (GPU only; never in the CI env). training/grpo_run.py and
+  # training/sft_warmup.py import these lazily on the GPU path, so mypy treats them as untyped.
+  "torch.*",
+  "trl.*",
+  "peft.*",
+  "transformers.*",
+  "vllm.*",
+  "datasets.*",
+  "wandb.*",
 ]
 ignore_missing_imports = true
 
 # ----------------------------------------------------------------------------
 # pytest: markers for gpu/external are declared and skipped-by-default in CI
-# per CLAUDE.md (no test may call external APIs or require a GPU by default).
+# per CONVENTIONS.md (no test may call external APIs or require a GPU by default).
 # ----------------------------------------------------------------------------
 [tool.pytest.ini_options]
 minversion = "8.0"
@@ -133,6 +161,7 @@ addopts = "-ra --strict-markers"
 markers = [
   "gpu: requires a GPU; skipped by default and in CI",
   "external: calls an external API; skipped by default and in CI",
+  "training: requires the 'training' extra (torch/trl/…); skipped by default and in CI",
 ]
 
 [tool.coverage.run]

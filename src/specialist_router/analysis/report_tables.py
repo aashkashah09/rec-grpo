@@ -1,6 +1,6 @@
 """Pure Markdown-table formatters for the Phase-2 artifacts (no plotting, no I/O).
 
-Every figure/table in the docs is generated from committed artifacts (``CLAUDE.md``) — these
+Every figure/table in the docs is generated from committed artifacts (``CONVENTIONS.md``) — these
 functions turn the JSON result rows produced by :mod:`specialist_router.analysis.pipeline` into
 Markdown tables for the README/report. They are pure and unit-tested; the matplotlib figures live
 in :mod:`specialist_router.analysis.plots`.

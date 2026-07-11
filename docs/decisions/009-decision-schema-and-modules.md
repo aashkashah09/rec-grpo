@@ -7,7 +7,7 @@
 ## Context
 
 Propensity-logged decisions are the trust-critical artifact of Phase 2: OPE and replay reproduce
-from the committed JSONL alone. `CLAUDE.md` requires a versioned schema module and an ADR for
+from the committed JSONL alone. `CONVENTIONS.md` requires a versioned schema module and an ADR for
 modules beyond `PROJECT_PLAN.md` §2.
 
 ## Decisions

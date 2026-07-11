@@ -1,4 +1,4 @@
-# CLAUDE.md — Briefing for Claude Code
+# CONVENTIONS.md — Engineering conventions and guardrails
 
 You are implementing the **Specialist + Router** project. Read `PROJECT_PLAN.md` first —
 it is the authoritative spec. This file tells you *how* to work in this repo.

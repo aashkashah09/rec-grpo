@@ -6,16 +6,16 @@
 
 ## Context
 
-`CLAUDE.md` requires an ADR for anything not in `PROJECT_PLAN.md` §2. Phase 1 adds three small
+`CONVENTIONS.md` requires an ADR for anything not in `PROJECT_PLAN.md` §2. Phase 1 adds three small
 modules that the conventions imply but the layout does not list explicitly.
 
 ## Decisions
 
-1. **`src/specialist_router/config.py`** — the single typed config module `CLAUDE.md` mandates
+1. **`src/specialist_router/config.py`** — the single typed config module `CONVENTIONS.md` mandates
    ("everything in `configs/*.yaml`, loaded through one typed config module"). Pydantic models
    with `extra="forbid"` so config typos fail loudly; `load_config(path, seed_override)` is the
    one entry point, honouring the `--config`/`--seed` contract.
-2. **`src/specialist_router/env/records.py`** — the versioned JSONL schema module `CLAUDE.md`
+2. **`src/specialist_router/env/records.py`** — the versioned JSONL schema module `CONVENTIONS.md`
    requires ("JSONL logs must have a versioned schema module"). Holds `SCHEMA_VERSION` and the
    `Task`, `Trajectory`, `ToolCall`, `Verdict` pydantic models and the `AnswerType` enum.
 3. **`src/specialist_router/env/reference_agents.py`** + the `Agent` protocol in

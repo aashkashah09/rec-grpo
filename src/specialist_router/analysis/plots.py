@@ -1,6 +1,6 @@
 """Matplotlib figures for the Phase-2 artifacts (optional ``analysis`` extra; lazy import).
 
-Two figures, both generated only from committed JSON result rows (``CLAUDE.md``: never hand-made):
+Two figures, generated only from committed JSON result rows (``CONVENTIONS.md``: never hand-made):
 the cost/quality frontier and the replay calibration (OPE-predicted vs realized). Importing this
 module is cheap; matplotlib is imported inside the functions so CI (which does not install the
 ``analysis`` extra) never needs it.

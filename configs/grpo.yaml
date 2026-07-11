@@ -1,3 +1,121 @@
-# GRPO config — Phase 3 (model, LoRA, TRL GRPOTrainer hyperparams).
-# Placeholder only in Phase 0.
-schema_version: 0
+# GRPO config — Phase 3 (GRPO specialist training). Loaded through the one typed config module
+# (src/specialist_router/config.py -> GrpoConfig). Heavy training deps are never imported to read
+# this; the config and the CPU dry-run validate without a GPU.
+#
+# This is the COMFORTABLE default profile (~40-80 GB VRAM, group size 8). For a 24 GB card
+# (RTX 4090 / A6000-tier) reduce grpo.num_generations to 2-4, keep vllm.enable_sleep_mode: true,
+# lower model.max_completion_len, and tighten rollout.max_tool_output_chars (see README / ADR-010).
+# Parameter names mirror the TRL 1.x GRPOConfig surface — re-verify against the pinned TRL version
+# when the GPU box is provisioned (TRL's agentic surface moves fast; ADR-010).
+schema_version: 3
+seed: 20260711
+
+model:
+  name: Qwen/Qwen3-4B-Instruct
+  max_seq_len: 8192
+  max_prompt_len: 3072          # schema + task + tool instructions (verify presence in pinned TRL)
+  max_completion_len: 3072      # TOTAL tokens across the whole multi-turn conversation, not per-turn
+  trust_remote_code: true
+  attn_implementation: flash_attention_2
+  dtype: bfloat16
+
+qlora:
+  r: 32
+  alpha: 64
+  dropout: 0.05
+  target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+  bias: none
+  load_in_4bit: true
+  bnb_4bit_quant_type: nf4
+  bnb_4bit_compute_dtype: bfloat16
+  bnb_4bit_use_double_quant: true
+  use_gradient_checkpointing: true
+
+vllm:
+  enable: true
+  mode: colocate
+  gpu_memory_utilization: 0.30
+  enable_sleep_mode: true
+  tensor_parallel_size: 1
+  importance_sampling_correction: true   # keep on for colocate GRPO (ADR-010)
+
+grpo:
+  num_generations: 8            # group size G (must be > 1; reduce to 2-4 on 24 GB)
+  num_iterations: 1             # inner GRPO updates (mu) per rollout batch
+  beta: 0.0                     # KL-to-ref weight (0 disables the reference anchor; TRL 1.x default)
+  epsilon: 0.2                  # clip (lower)
+  epsilon_high: null            # asymmetric upper clip (DAPO); null -> symmetric
+  loss_type: dapo
+  scale_rewards: group
+  temperature: 1.0
+  top_p: 1.0
+  learning_rate: 1.0e-5
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.03
+  weight_decay: 0.0
+  max_grad_norm: 1.0
+  per_device_train_batch_size: 8
+  gradient_accumulation_steps: 4   # rollout batch 32 divisible by num_generations 8
+  max_steps: 2000
+  mask_truncated_completions: true
+
+rollout:
+  max_turns: 12                 # matches the Phase-1 episode budget
+  tool_budget: 16
+  max_tool_output_chars: 4000   # hard cap on tool-result text fed back (bounds tokens / KV cache)
+  max_new_tokens_per_turn: 512
+
+reward:
+  w_correct: 1.0                # deterministic verifier verdict dominates
+  w_format: 0.15               # small tie-breaker vs binary-reward group collapse (ADR-011)
+  format_components:
+    - all_actions_parse
+    - used_tool_before_answer
+    - well_formed_final_answer
+    - within_budget
+
+data:
+  env_config: configs/env.yaml
+  task_pool_size: 4000
+  heldout_fraction: 0.15
+  split_seed: 20260711
+  curriculum_min_pass_rate: 0.05   # drop near-always-failed tasks once observed enough
+  curriculum_max_pass_rate: 0.95   # drop near-always-solved tasks (both give ~0 advantage)
+  curriculum_min_observations: 8
+
+evaluation:
+  eval_every_steps: 100
+  n_heldout_tasks: 160          # fixed held-out sample for stable eval curves
+  keep_top_k: 3                 # keep top-3 checkpoints by held-out overall success
+  metric: overall_success
+
+wandb:
+  mode: online
+  project: specialist-router
+  entity: null
+  run_name: null
+  log_every_steps: 10
+
+checkpoint:
+  output_dir: artifacts/phase3/checkpoints
+  save_every_steps: 100
+  save_total_limit: 3           # rolling 'latest' set for resume (top-K 'best' tracked separately)
+  flush_on_sigterm: true        # spot-preemption safety
+
+sft:
+  enabled: false                # RL run never triggers SFT implicitly; opt in via scripts/sft_warmup.py
+  trigger_compliance_threshold: 0.60   # warmup if base tool-format compliance < 60% (PROJECT_PLAN §3)
+  probe_n_tasks: 100
+  n_demos_min: 500
+  n_demos_max: 1500
+  output_dir: artifacts/phase3/sft
+  epochs: 2
+  learning_rate: 1.0e-4
+  max_seq_len: 8192
+
+dry_run:
+  env_config: configs/env.mini.yaml   # small DB/task pool so the CPU dry-run (and CI) stay fast
+  tiny_model: trl-internal-testing/tiny-Qwen3ForCausalLM   # opt-in real CPU step (@pytest.mark.training)
+  num_generations: 2
+  max_steps: 2
+  n_tasks: 4

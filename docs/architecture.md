@@ -2,10 +2,12 @@
 
 Data flow for the Specialist + Router system (from [`PROJECT_PLAN.md`](../PROJECT_PLAN.md)).
 Components are implemented phase by phase. **Implemented so far:** the entire `env/` block
-(Phase 1) and the `router/` + `ope/` blocks (Phase 2), driven on CPU by a **stub simulator**
-backend in place of live agents. The real `local_agent`/`api_agent` arms exist behind the same
-`ArmRunner`/`Agent` interfaces but are exercised only in Phase 4 (`serving.backend: real`); until
-then the diagram's `agents/` box runs ahead of what CI drives.
+(Phase 1), the `router/` + `ope/` blocks (Phase 2), and the `training/` block (Phase 3, code +
+config + CPU dry-run), driven on CPU by a **stub simulator** backend in place of live agents. The
+real `local_agent`/`api_agent` arms exist behind the same `ArmRunner`/`Agent` interfaces but are
+exercised only in Phase 4 (`serving.backend: real`); until then the diagram's `agents/` box runs
+ahead of what CI drives. The Phase-3 GRPO run itself is GPU-only and never run in CI — CI drives its
+CPU dry-run (mocked generation) through the real verifier and reward.
 
 ```mermaid
 flowchart TD
@@ -40,6 +42,14 @@ flowchart TD
         FRONTIER[Cost/quality/latency frontier]
     end
 
+    subgraph TRAIN["training/ (Phase 3 — GPU; CPU dry-run in CI)"]
+        SAMPLER[Task sampler<br/>train/held-out split + curriculum]
+        ROLLOUT[EnvRollout<br/>rollout_func: multi-turn + loss mask]
+        TREWARD[Training reward<br/>1.0*correct + 0.15*format]
+        GRPO[TRL GRPOTrainer<br/>QLoRA + colocate vLLM]
+        HELDOUT[Held-out eval<br/>per-template success + format-rate drift]
+    end
+
     TASKS --> FEATURES
     FEATURES --> POLICY
     POLICY -->|action| STUB
@@ -54,6 +64,15 @@ flowchart TD
     LOGGER --> OPE
     OPE --> REPLAY
     OPE --> FRONTIER
+
+    TASKS --> SAMPLER
+    SAMPLER --> ROLLOUT
+    ROLLOUT --> EPISODE
+    VERIFIER --> TREWARD
+    TREWARD --> GRPO
+    GRPO -->|updates policy| LOCAL
+    GRPO --> HELDOUT
+    HELDOUT --> VERIFIER
 ```
 
 Trust-critical, deterministic components — the verifier, task ground truth, and the OPE

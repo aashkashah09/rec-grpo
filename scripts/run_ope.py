@@ -2,7 +2,7 @@
 
 Reads a propensity-logged JSONL decisions file, fits and off-policy-evaluates every candidate
 policy, and writes the results JSON and Markdown table. Applies ONLY to the single routing
-decision (``CLAUDE.md`` rule #2).
+decision (``CONVENTIONS.md`` rule #2).
 """
 
 from __future__ import annotations

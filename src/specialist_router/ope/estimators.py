@@ -1,6 +1,6 @@
 """Off-policy estimators for the single routing decision: IPS, SNIPS, the direct method, and DR.
 
-**Scope (``CLAUDE.md`` rule #2 / ``PROJECT_PLAN`` §1.2):** every estimator here evaluates the
+**Scope (``CONVENTIONS.md`` rule #2 / ``PROJECT_PLAN`` §1.2):** every estimator here evaluates the
 *routing decision alone* — one context, one arm, one scalar reward. There is no trajectory-level
 importance sampling of the agent's tool-use rollout, and none must ever be added. The unit of
 analysis is a :class:`~specialist_router.router.logger.LoggedDataset` row.
@@ -52,7 +52,9 @@ def importance_weights(
     weights = target_prop / data.propensity
     if weight_clip is not None:
         weights = np.minimum(weights, weight_clip)
-    return weights
+    # Explicit cast: newer numpy (>=2.3) stubs type ``__truediv__``/``minimum`` as ``Any``, so pin
+    # the declared float64 array return (behavior-neutral; ``weights`` is already float64).
+    return np.asarray(weights, dtype=np.float64)
 
 
 def cross_fitted_q(
