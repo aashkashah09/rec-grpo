@@ -140,6 +140,22 @@ $0.014/decision** vs `always_api`'s **0.88 at $0.018** — near-frontier quality
 traffic to the cheap arm. With these particular stub cost/latency scales the *reward*-optimal point
 sits close to always-frontier; the λ/μ sweep is what surfaces where the router wins on reward too.
 
+**λ/μ reward-weight sweep** (re-scoring the same 2000 logs; does a learned router beat always_api
+on reward?). The learned router wins in **11/24 cells, starting at λ ≥ 0.30**; the margin grows
+with the cost weight (up to +0.481 at λ=1.0). The default (λ=0.3, μ=0.1) sits right at the
+crossover — which is exactly why the frontier, not raw reward, is where routing pays at low λ:
+
+| λ | μ | always_api DR | best learned DR | winner | margin |
+| --- | --- | --- | --- | --- | --- |
+| 0.00 | 0.10 | 0.836 | 0.834 | thompson_logistic | −0.001 |
+| 0.30 | 0.10 | 0.579 | 0.584 | epsilon_greedy | +0.005 |
+| 0.50 | 0.10 | 0.408 | 0.482 | epsilon_greedy | +0.074 |
+| 1.00 | 0.20 | −0.076 | 0.406 | thompson_logistic | +0.481 |
+
+Full grid + heatmap: [`artifacts/phase2/lambda_mu_sweep_table.md`](artifacts/phase2/lambda_mu_sweep_table.md),
+[`lambda_mu_sweep.png`](artifacts/phase2/lambda_mu_sweep.png). Reproduce with
+`uv run python scripts/sweep_lambda_mu.py`.
+
 **When estimators break** (known-truth tabular simulator, shrinking logging overlap):
 
 | min π₀ | IPS std | SNIPS std | DR std | ESS frac |
