@@ -5,6 +5,12 @@
 .PHONY: setup lint test \
         generate-tasks serve traffic ope repro-phase2 eval report
 
+# Defaults for generate-tasks (override on the command line, e.g. `make generate-tasks CONFIG=configs/env.yaml`).
+CONFIG ?= configs/env.mini.yaml
+SEED   ?= 20260711
+OUT    ?= build/tasks.jsonl
+DB     ?= build/env.sqlite
+
 # ---- Phase 0 (implemented) -------------------------------------------------
 
 setup:  ## Install deps into .venv and wire up pre-commit hooks.
@@ -22,8 +28,8 @@ test:  ## Run the pytest suite (CPU-only; gpu/external markers skipped).
 # ---- Phases 1-5 (not yet implemented) --------------------------------------
 # Each stub exits non-zero so nothing silently "passes" before its phase lands.
 
-generate-tasks:  ## [Phase 1] Emit tasks + ground truth.
-	@echo "generate-tasks: not implemented until Phase 1" && exit 1
+generate-tasks:  ## [Phase 1] Emit tasks + ground truth as JSONL (and the backing SQLite DB).
+	uv run python scripts/generate_tasks.py --config $(CONFIG) --seed $(SEED) --out $(OUT) --db $(DB)
 
 serve:  ## [Phase 2] Launch the FastAPI /solve service.
 	@echo "serve: not implemented until Phase 2" && exit 1
