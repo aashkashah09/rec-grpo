@@ -1,0 +1,39 @@
+processed_dir: data/processed
+checkpoint_dir: checkpoints/sft
+results_dir: results
+
+model:
+  d_model: 384
+  n_layers: 8
+  n_heads: 6
+  d_ff: 1280
+  max_seq_len: 256
+  dropout: 0.1
+  tie_embeddings: true
+
+data:
+  max_history_items: 50
+  # A user's first interaction has no context to learn from, so it is not a
+  # training example. It is still scored at evaluation time, with an empty prompt.
+  min_history_items: 1
+
+train:
+  epochs: 30
+  batch_size: 256
+  lr: 3.0e-4
+  min_lr: 3.0e-5
+  weight_decay: 0.05
+  betas: [0.9, 0.98]
+  warmup_steps: 1000
+  grad_clip: 1.0
+  label_smoothing: 0.0
+  log_every: 100
+  eval_every_epochs: 1
+  early_stop_patience: 5
+  num_workers: 4
+  seed: 42
+
+eval:
+  beam_size: 30
+  topk: [5, 10, 20]
+  val_subsample: 4000       # the per-epoch validation curve; reported numbers use the full split
