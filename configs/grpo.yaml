@@ -1,0 +1,55 @@
+processed_dir: data/processed
+sft_checkpoint: checkpoints/sft/best.pt
+checkpoint_dir: checkpoints/grpo
+results_dir: results
+
+model:
+  max_history_items: 50
+
+rollout:
+  group_size: 8               # slates sampled per prompt
+  slate_size: 10
+  temperature: 1.0
+  top_k: 0                    # 0 = no truncation beyond the trie constraint
+  oversample: 32              # sequences drawn per slate before dedup
+  beam_backfill: true         # top up short slates from constrained beam search
+
+reward:
+  # Computed from held-out interactions in the validation window. No reward
+  # model; the signal is the user's own subsequent behaviour.
+  metric: ndcg
+  metric_k: 10
+  cold_lambda: 1.0
+  cold_cap: 2                 # cold hits beyond this stop paying
+  normalize_advantage: true
+
+train:
+  epochs: 2
+  prompts_per_step: 16
+  lr: 1.0e-5
+  min_lr: 1.0e-6
+  weight_decay: 0.0
+  warmup_steps: 50
+  grad_clip: 1.0
+  clip_eps: 0.2
+  kl_coef: 0.02               # k3 estimator against the frozen SFT policy
+  log_every: 10
+  eval_every_steps: 200
+  eval_subsample: 4000        # mid-run validation; lambda is selected on the full split
+  seed: 42
+
+ablation:
+  # Cap on the cold-hit bonus, held at the selected lambda. 0 removes the cap,
+  # so every additional cold hit keeps paying.
+  cold_cap: [1, 2, 5, 0]
+  cold_lambda: 1.0
+
+sweep:
+  cold_lambda: [0.0, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0]
+  select_on: validation
+  # Take the most cold-weighted policy that does not cost accuracy against the
+  # supervised model. Fixed before the sweep was run.
+  objective: cold_recall@10
+  constraint:
+    metric: ndcg@10
+    at_least: sft
