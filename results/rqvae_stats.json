@@ -1,0 +1,23 @@
+{
+  "n_items": 12101,
+  "unique_prefixes": 11058,
+  "colliding_items": 2022,
+  "max_collision_group": 4,
+  "collision_group_sizes": {
+    "1": 10079,
+    "2": 921,
+    "3": 52,
+    "4": 6
+  },
+  "active_codes": [
+    256,
+    254,
+    249
+  ],
+  "codebook_size": 256,
+  "suffix_tokens_used": 4,
+  "encoder": "sentence-transformers/sentence-t5-base",
+  "config": "configs/rqvae.yaml",
+  "seed": 42,
+  "finished_at": "2026-07-14T19:33:47+00:00"
+}

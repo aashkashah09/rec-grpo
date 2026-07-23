@@ -1,0 +1,96 @@
+{
+  "config": "configs/grpo.yaml",
+  "seed": 42,
+  "select_on": "validation",
+  "objective": "cold_recall@10",
+  "constraint": {
+    "metric": "ndcg@10",
+    "at_least": "sft"
+  },
+  "sft_validation": {
+    "recall@10": 0.047154,
+    "ndcg@10": 0.025289,
+    "cold_recall@10": 0.022962
+  },
+  "candidates": [
+    {
+      "cold_lambda": 0.0,
+      "cold_cap": 2,
+      "steps": 1400,
+      "checkpoint": "checkpoints/grpo/lambda0/policy.pt",
+      "validation": {
+        "recall@10": 0.051587,
+        "ndcg@10": 0.028216,
+        "cold_recall@10": 0.016648
+      }
+    },
+    {
+      "cold_lambda": 0.25,
+      "cold_cap": 2,
+      "steps": 1400,
+      "checkpoint": "checkpoints/grpo/lambda0.25/policy.pt",
+      "validation": {
+        "recall@10": 0.05194,
+        "ndcg@10": 0.028009,
+        "cold_recall@10": 0.020666
+      }
+    },
+    {
+      "cold_lambda": 0.5,
+      "cold_cap": 2,
+      "steps": 1400,
+      "checkpoint": "checkpoints/grpo/lambda0.5/policy.pt",
+      "validation": {
+        "recall@10": 0.049622,
+        "ndcg@10": 0.027011,
+        "cold_recall@10": 0.024684
+      }
+    },
+    {
+      "cold_lambda": 1.0,
+      "cold_cap": 2,
+      "steps": 1400,
+      "checkpoint": "checkpoints/grpo/lambda1/policy.pt",
+      "validation": {
+        "recall@10": 0.047708,
+        "ndcg@10": 0.025807,
+        "cold_recall@10": 0.031573
+      }
+    },
+    {
+      "cold_lambda": 2.0,
+      "cold_cap": 2,
+      "steps": 1400,
+      "checkpoint": "checkpoints/grpo/lambda2/policy.pt",
+      "validation": {
+        "recall@10": 0.044836,
+        "ndcg@10": 0.024119,
+        "cold_recall@10": 0.035017
+      }
+    },
+    {
+      "cold_lambda": 4.0,
+      "cold_cap": 2,
+      "steps": 1400,
+      "checkpoint": "checkpoints/grpo/lambda4/policy.pt",
+      "validation": {
+        "recall@10": 0.042519,
+        "ndcg@10": 0.022236,
+        "cold_recall@10": 0.037313
+      }
+    },
+    {
+      "cold_lambda": 8.0,
+      "cold_cap": 2,
+      "steps": 1400,
+      "checkpoint": "checkpoints/grpo/lambda8/policy.pt",
+      "validation": {
+        "recall@10": 0.038035,
+        "ndcg@10": 0.019693,
+        "cold_recall@10": 0.036739
+      }
+    }
+  ],
+  "selected": 1.0,
+  "finished_at": "2026-07-21T02:47:19+00:00"
+}

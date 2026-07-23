@@ -1,0 +1,5 @@
+cold_cap,cold_lambda,model,recall@10,ndcg@10,cold_recall@10,cold_slate_share,cold_conversion
+1,1.0,grpo-cap1,0.046751,0.025303,0.023929,0.022801,0.008396
+2,1.0,grpo-lambda1,0.04539,0.024495,0.028967,0.030997,0.007476
+5,1.0,grpo-cap5,0.042418,0.022703,0.032116,0.048599,0.005287
+none,1.0,grpo-capinf,0.030882,0.016114,0.030856,0.214,0.001154

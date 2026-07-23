@@ -1,0 +1,22 @@
+{
+  "model": "sasrec",
+  "framework": "recbole",
+  "config": "configs/sasrec.yaml",
+  "seed": 42,
+  "finished_at": "2026-07-20T17:41:09+00:00",
+  "metrics": {
+    "all": {
+      "recall@5": 0.030076,
+      "ndcg@5": 0.020194,
+      "recall@10": 0.04801,
+      "ndcg@10": 0.026041,
+      "recall@20": 0.073098,
+      "ndcg@20": 0.032358
+    },
+    "cold": {
+      "n": 1588,
+      "recall@10": 0.00063,
+      "hits@10": 1
+    }
+  }
+}

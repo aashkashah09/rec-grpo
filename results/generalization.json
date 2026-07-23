@@ -1,0 +1,50 @@
+{
+  "split": "test",
+  "k": 10,
+  "baseline": "sft",
+  "policy": "grpo-lambda1",
+  "n_cold_items": 487,
+  "n_reward_visible_items": 238,
+  "n_never_rewarded_items": 249,
+  "n_replicates": 10000,
+  "seed": 42,
+  "finished_at": "2026-07-23T08:04:12+00:00",
+  "placement_shift": {
+    "cold": {
+      "observed": 0.012996,
+      "ci_low": 0.010773,
+      "ci_high": 0.015244,
+      "p_value": 0.0,
+      "n_replicates": 10000,
+      "n_users": 11486,
+      "subset": "cold",
+      "baseline_share": 0.018001,
+      "policy_share": 0.030997,
+      "relative_change": 0.72196
+    },
+    "reward_visible": {
+      "observed": 0.007511,
+      "ci_low": 0.006095,
+      "ci_high": 0.008944,
+      "p_value": 0.0,
+      "n_replicates": 10000,
+      "n_users": 11486,
+      "subset": "reward_visible",
+      "baseline_share": 0.008988,
+      "policy_share": 0.016499,
+      "relative_change": 0.83567
+    },
+    "never_rewarded": {
+      "observed": 0.005486,
+      "ci_low": 0.004301,
+      "ci_high": 0.006674,
+      "p_value": 0.0,
+      "n_replicates": 10000,
+      "n_users": 11486,
+      "subset": "never_rewarded",
+      "baseline_share": 0.009013,
+      "policy_share": 0.014499,
+      "relative_change": 0.608676
+    }
+  }
+}

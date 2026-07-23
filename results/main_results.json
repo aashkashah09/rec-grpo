@@ -1,0 +1,662 @@
+{
+  "sft": {
+    "checkpoint": "checkpoints/sft/best.pt",
+    "config": "configs/sft.yaml",
+    "split": "test",
+    "seed": 42,
+    "n_parameters": 13114624,
+    "beam_size": 30,
+    "eval_seconds": 2178.4,
+    "finished_at": "2026-07-22T06:36:30+00:00",
+    "metrics": {
+      "all": {
+        "n": 19850,
+        "recall@5": 0.028111,
+        "ndcg@5": 0.018605,
+        "hits@5": 558,
+        "recall@10": 0.044987,
+        "ndcg@10": 0.023991,
+        "hits@10": 893,
+        "recall@20": 0.069219,
+        "ndcg@20": 0.030732,
+        "hits@20": 1374
+      },
+      "cold": {
+        "n": 1588,
+        "recall@5": 0.012594,
+        "ndcg@5": 0.008535,
+        "hits@5": 20,
+        "recall@10": 0.020781,
+        "ndcg@10": 0.011006,
+        "hits@10": 33,
+        "recall@20": 0.032116,
+        "ndcg@20": 0.014099,
+        "hits@20": 51
+      },
+      "cold_reward_visible": {
+        "n": 793,
+        "recall@5": 0.01261,
+        "ndcg@5": 0.008286,
+        "hits@5": 10,
+        "recall@10": 0.020177,
+        "ndcg@10": 0.010685,
+        "hits@10": 16,
+        "recall@20": 0.031526,
+        "ndcg@20": 0.013687,
+        "hits@20": 25
+      },
+      "cold_never_rewarded": {
+        "n": 795,
+        "recall@5": 0.012579,
+        "ndcg@5": 0.008783,
+        "hits@5": 10,
+        "recall@10": 0.021384,
+        "ndcg@10": 0.011325,
+        "hits@10": 17,
+        "recall@20": 0.032704,
+        "ndcg@20": 0.014507,
+        "hits@20": 26
+      }
+    }
+  },
+  "grpo-lambda0": {
+    "checkpoint": "checkpoints/grpo/lambda0/policy.pt",
+    "config": "configs/sft.yaml",
+    "split": "test",
+    "seed": 42,
+    "n_parameters": 13114624,
+    "beam_size": 30,
+    "eval_seconds": 2201.7,
+    "finished_at": "2026-07-22T07:13:24+00:00",
+    "metrics": {
+      "all": {
+        "n": 19850,
+        "recall@5": 0.030882,
+        "ndcg@5": 0.020786,
+        "hits@5": 613,
+        "recall@10": 0.049219,
+        "ndcg@10": 0.026803,
+        "hits@10": 977,
+        "recall@20": 0.074811,
+        "ndcg@20": 0.034335,
+        "hits@20": 1485
+      },
+      "cold": {
+        "n": 1588,
+        "recall@5": 0.009446,
+        "ndcg@5": 0.006207,
+        "hits@5": 15,
+        "recall@10": 0.015113,
+        "ndcg@10": 0.008004,
+        "hits@10": 24,
+        "recall@20": 0.0233,
+        "ndcg@20": 0.010253,
+        "hits@20": 37
+      },
+      "cold_reward_visible": {
+        "n": 793,
+        "recall@5": 0.010088,
+        "ndcg@5": 0.006733,
+        "hits@5": 8,
+        "recall@10": 0.016393,
+        "ndcg@10": 0.008682,
+        "hits@10": 13,
+        "recall@20": 0.025221,
+        "ndcg@20": 0.011122,
+        "hits@20": 20
+      },
+      "cold_never_rewarded": {
+        "n": 795,
+        "recall@5": 0.008805,
+        "ndcg@5": 0.005683,
+        "hits@5": 7,
+        "recall@10": 0.013836,
+        "ndcg@10": 0.007328,
+        "hits@10": 11,
+        "recall@20": 0.021384,
+        "ndcg@20": 0.009387,
+        "hits@20": 17
+      }
+    }
+  },
+  "grpo-lambda0.25": {
+    "checkpoint": "checkpoints/grpo/lambda0.25/policy.pt",
+    "config": "configs/sft.yaml",
+    "split": "test",
+    "seed": 42,
+    "n_parameters": 13114624,
+    "beam_size": 30,
+    "eval_seconds": 2194.8,
+    "finished_at": "2026-07-22T07:50:10+00:00",
+    "metrics": {
+      "all": {
+        "n": 19850,
+        "recall@5": 0.030982,
+        "ndcg@5": 0.020655,
+        "hits@5": 615,
+        "recall@10": 0.049521,
+        "ndcg@10": 0.026634,
+        "hits@10": 983,
+        "recall@20": 0.075264,
+        "ndcg@20": 0.034118,
+        "hits@20": 1494
+      },
+      "cold": {
+        "n": 1588,
+        "recall@5": 0.011335,
+        "ndcg@5": 0.007501,
+        "hits@5": 18,
+        "recall@10": 0.018262,
+        "ndcg@10": 0.009672,
+        "hits@10": 29,
+        "recall@20": 0.028338,
+        "ndcg@20": 0.01239,
+        "hits@20": 45
+      },
+      "cold_reward_visible": {
+        "n": 793,
+        "recall@5": 0.011349,
+        "ndcg@5": 0.007769,
+        "hits@5": 9,
+        "recall@10": 0.018916,
+        "ndcg@10": 0.010018,
+        "hits@10": 15,
+        "recall@20": 0.029004,
+        "ndcg@20": 0.012833,
+        "hits@20": 23
+      },
+      "cold_never_rewarded": {
+        "n": 795,
+        "recall@5": 0.011321,
+        "ndcg@5": 0.007232,
+        "hits@5": 9,
+        "recall@10": 0.01761,
+        "ndcg@10": 0.009326,
+        "hits@10": 14,
+        "recall@20": 0.027673,
+        "ndcg@20": 0.011947,
+        "hits@20": 22
+      }
+    }
+  },
+  "grpo-lambda0.5": {
+    "checkpoint": "checkpoints/grpo/lambda0.5/policy.pt",
+    "config": "configs/sft.yaml",
+    "split": "test",
+    "seed": 42,
+    "n_parameters": 13114624,
+    "beam_size": 30,
+    "eval_seconds": 2188.1,
+    "finished_at": "2026-07-22T08:26:51+00:00",
+    "metrics": {
+      "all": {
+        "n": 19850,
+        "recall@5": 0.029622,
+        "ndcg@5": 0.019909,
+        "hits@5": 588,
+        "recall@10": 0.047305,
+        "ndcg@10": 0.025673,
+        "hits@10": 939,
+        "recall@20": 0.072343,
+        "ndcg@20": 0.032887,
+        "hits@20": 1436
+      },
+      "cold": {
+        "n": 1588,
+        "recall@5": 0.014484,
+        "ndcg@5": 0.009311,
+        "hits@5": 23,
+        "recall@10": 0.02267,
+        "ndcg@10": 0.012006,
+        "hits@10": 36,
+        "recall@20": 0.034635,
+        "ndcg@20": 0.01538,
+        "hits@20": 55
+      },
+      "cold_reward_visible": {
+        "n": 793,
+        "recall@5": 0.015132,
+        "ndcg@5": 0.00984,
+        "hits@5": 12,
+        "recall@10": 0.02396,
+        "ndcg@10": 0.012689,
+        "hits@10": 19,
+        "recall@20": 0.03657,
+        "ndcg@20": 0.016255,
+        "hits@20": 29
+      },
+      "cold_never_rewarded": {
+        "n": 795,
+        "recall@5": 0.013836,
+        "ndcg@5": 0.008783,
+        "hits@5": 11,
+        "recall@10": 0.021384,
+        "ndcg@10": 0.011325,
+        "hits@10": 17,
+        "recall@20": 0.032704,
+        "ndcg@20": 0.014507,
+        "hits@20": 26
+      }
+    }
+  },
+  "grpo-lambda1": {
+    "checkpoint": "checkpoints/grpo/lambda1/policy.pt",
+    "config": "configs/sft.yaml",
+    "split": "test",
+    "seed": 42,
+    "n_parameters": 13114624,
+    "beam_size": 30,
+    "eval_seconds": 2209.5,
+    "finished_at": "2026-07-22T09:03:52+00:00",
+    "metrics": {
+      "all": {
+        "n": 19850,
+        "recall@5": 0.028413,
+        "ndcg@5": 0.018996,
+        "hits@5": 564,
+        "recall@10": 0.04539,
+        "ndcg@10": 0.024495,
+        "hits@10": 901,
+        "recall@20": 0.069924,
+        "ndcg@20": 0.031378,
+        "hits@20": 1388
+      },
+      "cold": {
+        "n": 1588,
+        "recall@5": 0.018262,
+        "ndcg@5": 0.011897,
+        "hits@5": 29,
+        "recall@10": 0.028967,
+        "ndcg@10": 0.015341,
+        "hits@10": 46,
+        "recall@20": 0.04471,
+        "ndcg@20": 0.019652,
+        "hits@20": 71
+      },
+      "cold_reward_visible": {
+        "n": 793,
+        "recall@5": 0.018916,
+        "ndcg@5": 0.01243,
+        "hits@5": 15,
+        "recall@10": 0.030265,
+        "ndcg@10": 0.016028,
+        "hits@10": 24,
+        "recall@20": 0.046658,
+        "ndcg@20": 0.020532,
+        "hits@20": 37
+      },
+      "cold_never_rewarded": {
+        "n": 795,
+        "recall@5": 0.01761,
+        "ndcg@5": 0.011366,
+        "hits@5": 14,
+        "recall@10": 0.027673,
+        "ndcg@10": 0.014656,
+        "hits@10": 22,
+        "recall@20": 0.042767,
+        "ndcg@20": 0.018774,
+        "hits@20": 34
+      }
+    }
+  },
+  "grpo-lambda2": {
+    "checkpoint": "checkpoints/grpo/lambda2/policy.pt",
+    "config": "configs/sft.yaml",
+    "split": "test",
+    "seed": 42,
+    "n_parameters": 13114624,
+    "beam_size": 30,
+    "eval_seconds": 2215.3,
+    "finished_at": "2026-07-22T09:40:59+00:00",
+    "metrics": {
+      "all": {
+        "n": 19850,
+        "recall@5": 0.027053,
+        "ndcg@5": 0.017923,
+        "hits@5": 537,
+        "recall@10": 0.043224,
+        "ndcg@10": 0.023112,
+        "hits@10": 858,
+        "recall@20": 0.066952,
+        "ndcg@20": 0.029606,
+        "hits@20": 1329
+      },
+      "cold": {
+        "n": 1588,
+        "recall@5": 0.019521,
+        "ndcg@5": 0.012673,
+        "hits@5": 31,
+        "recall@10": 0.030856,
+        "ndcg@10": 0.016342,
+        "hits@10": 49,
+        "recall@20": 0.047229,
+        "ndcg@20": 0.020934,
+        "hits@20": 75
+      },
+      "cold_reward_visible": {
+        "n": 793,
+        "recall@5": 0.020177,
+        "ndcg@5": 0.013466,
+        "hits@5": 16,
+        "recall@10": 0.032787,
+        "ndcg@10": 0.017364,
+        "hits@10": 26,
+        "recall@20": 0.050441,
+        "ndcg@20": 0.022243,
+        "hits@20": 40
+      },
+      "cold_never_rewarded": {
+        "n": 795,
+        "recall@5": 0.018868,
+        "ndcg@5": 0.011882,
+        "hits@5": 15,
+        "recall@10": 0.028931,
+        "ndcg@10": 0.015322,
+        "hits@10": 23,
+        "recall@20": 0.044025,
+        "ndcg@20": 0.019627,
+        "hits@20": 35
+      }
+    }
+  },
+  "grpo-lambda4": {
+    "checkpoint": "checkpoints/grpo/lambda4/policy.pt",
+    "config": "configs/sft.yaml",
+    "split": "test",
+    "seed": 42,
+    "n_parameters": 13114624,
+    "beam_size": 30,
+    "eval_seconds": 2231.6,
+    "finished_at": "2026-07-22T10:18:23+00:00",
+    "metrics": {
+      "all": {
+        "n": 19850,
+        "recall@5": 0.024987,
+        "ndcg@5": 0.016314,
+        "hits@5": 496,
+        "recall@10": 0.040504,
+        "ndcg@10": 0.021037,
+        "hits@10": 804,
+        "recall@20": 0.062922,
+        "ndcg@20": 0.026948,
+        "hits@20": 1249
+      },
+      "cold": {
+        "n": 1588,
+        "recall@5": 0.021411,
+        "ndcg@5": 0.013966,
+        "hits@5": 34,
+        "recall@10": 0.034005,
+        "ndcg@10": 0.018009,
+        "hits@10": 54,
+        "recall@20": 0.052267,
+        "ndcg@20": 0.02307,
+        "hits@20": 83
+      },
+      "cold_reward_visible": {
+        "n": 793,
+        "recall@5": 0.022699,
+        "ndcg@5": 0.014502,
+        "hits@5": 18,
+        "recall@10": 0.035309,
+        "ndcg@10": 0.0187,
+        "hits@10": 28,
+        "recall@20": 0.054224,
+        "ndcg@20": 0.023955,
+        "hits@20": 43
+      },
+      "cold_never_rewarded": {
+        "n": 795,
+        "recall@5": 0.020126,
+        "ndcg@5": 0.013432,
+        "hits@5": 16,
+        "recall@10": 0.032704,
+        "ndcg@10": 0.01732,
+        "hits@10": 26,
+        "recall@20": 0.050314,
+        "ndcg@20": 0.022187,
+        "hits@20": 40
+      }
+    }
+  },
+  "grpo-lambda8": {
+    "checkpoint": "checkpoints/grpo/lambda8/policy.pt",
+    "config": "configs/sft.yaml",
+    "split": "test",
+    "seed": 42,
+    "n_parameters": 13114624,
+    "beam_size": 30,
+    "eval_seconds": 2246.0,
+    "finished_at": "2026-07-22T10:56:01+00:00",
+    "metrics": {
+      "all": {
+        "n": 19850,
+        "recall@5": 0.022469,
+        "ndcg@5": 0.01458,
+        "hits@5": 446,
+        "recall@10": 0.036574,
+        "ndcg@10": 0.018801,
+        "hits@10": 726,
+        "recall@20": 0.05733,
+        "ndcg@20": 0.024084,
+        "hits@20": 1138
+      },
+      "cold": {
+        "n": 1588,
+        "recall@5": 0.020781,
+        "ndcg@5": 0.013449,
+        "hits@5": 33,
+        "recall@10": 0.032746,
+        "ndcg@10": 0.017342,
+        "hits@10": 52,
+        "recall@20": 0.050378,
+        "ndcg@20": 0.022215,
+        "hits@20": 80
+      },
+      "cold_reward_visible": {
+        "n": 793,
+        "recall@5": 0.021438,
+        "ndcg@5": 0.013984,
+        "hits@5": 17,
+        "recall@10": 0.034048,
+        "ndcg@10": 0.018032,
+        "hits@10": 27,
+        "recall@20": 0.051702,
+        "ndcg@20": 0.023099,
+        "hits@20": 41
+      },
+      "cold_never_rewarded": {
+        "n": 795,
+        "recall@5": 0.020126,
+        "ndcg@5": 0.012915,
+        "hits@5": 16,
+        "recall@10": 0.031447,
+        "ndcg@10": 0.016654,
+        "hits@10": 25,
+        "recall@20": 0.049057,
+        "ndcg@20": 0.021334,
+        "hits@20": 39
+      }
+    }
+  },
+  "grpo-cap1": {
+    "checkpoint": "checkpoints/grpo/cap1/policy.pt",
+    "config": "configs/sft.yaml",
+    "split": "test",
+    "seed": 42,
+    "n_parameters": 13114624,
+    "beam_size": 30,
+    "eval_seconds": 2196.2,
+    "finished_at": "2026-07-23T06:06:48+00:00",
+    "metrics": {
+      "all": {
+        "n": 19850,
+        "recall@5": 0.029572,
+        "ndcg@5": 0.019622,
+        "hits@5": 587,
+        "recall@10": 0.046751,
+        "ndcg@10": 0.025303,
+        "hits@10": 928,
+        "recall@20": 0.07194,
+        "ndcg@20": 0.032413,
+        "hits@20": 1428
+      },
+      "cold": {
+        "n": 1588,
+        "recall@5": 0.015113,
+        "ndcg@5": 0.009828,
+        "hits@5": 24,
+        "recall@10": 0.023929,
+        "ndcg@10": 0.012673,
+        "hits@10": 38,
+        "recall@20": 0.036524,
+        "ndcg@20": 0.016234,
+        "hits@20": 58
+      },
+      "cold_reward_visible": {
+        "n": 793,
+        "recall@5": 0.016393,
+        "ndcg@5": 0.010358,
+        "hits@5": 13,
+        "recall@10": 0.025221,
+        "ndcg@10": 0.013357,
+        "hits@10": 20,
+        "recall@20": 0.037831,
+        "ndcg@20": 0.01711,
+        "hits@20": 30
+      },
+      "cold_never_rewarded": {
+        "n": 795,
+        "recall@5": 0.013836,
+        "ndcg@5": 0.009299,
+        "hits@5": 11,
+        "recall@10": 0.022642,
+        "ndcg@10": 0.011991,
+        "hits@10": 18,
+        "recall@20": 0.03522,
+        "ndcg@20": 0.01536,
+        "hits@20": 28
+      }
+    }
+  },
+  "grpo-cap5": {
+    "checkpoint": "checkpoints/grpo/cap5/policy.pt",
+    "config": "configs/sft.yaml",
+    "split": "test",
+    "seed": 42,
+    "n_parameters": 13114624,
+    "beam_size": 30,
+    "eval_seconds": 2224.8,
+    "finished_at": "2026-07-23T06:44:05+00:00",
+    "metrics": {
+      "all": {
+        "n": 19850,
+        "recall@5": 0.026549,
+        "ndcg@5": 0.017606,
+        "hits@5": 527,
+        "recall@10": 0.042418,
+        "ndcg@10": 0.022703,
+        "hits@10": 842,
+        "recall@20": 0.065743,
+        "ndcg@20": 0.029083,
+        "hits@20": 1305
+      },
+      "cold": {
+        "n": 1588,
+        "recall@5": 0.020151,
+        "ndcg@5": 0.01319,
+        "hits@5": 32,
+        "recall@10": 0.032116,
+        "ndcg@10": 0.017009,
+        "hits@10": 51,
+        "recall@20": 0.049118,
+        "ndcg@20": 0.021789,
+        "hits@20": 78
+      },
+      "cold_reward_visible": {
+        "n": 793,
+        "recall@5": 0.021438,
+        "ndcg@5": 0.013984,
+        "hits@5": 17,
+        "recall@10": 0.034048,
+        "ndcg@10": 0.018032,
+        "hits@10": 27,
+        "recall@20": 0.051702,
+        "ndcg@20": 0.023099,
+        "hits@20": 41
+      },
+      "cold_never_rewarded": {
+        "n": 795,
+        "recall@5": 0.018868,
+        "ndcg@5": 0.012399,
+        "hits@5": 15,
+        "recall@10": 0.030189,
+        "ndcg@10": 0.015988,
+        "hits@10": 24,
+        "recall@20": 0.046541,
+        "ndcg@20": 0.020481,
+        "hits@20": 37
+      }
+    }
+  },
+  "grpo-capinf": {
+    "checkpoint": "checkpoints/grpo/capinf/policy.pt",
+    "config": "configs/sft.yaml",
+    "split": "test",
+    "seed": 42,
+    "n_parameters": 13114624,
+    "beam_size": 30,
+    "eval_seconds": 2287.9,
+    "finished_at": "2026-07-23T07:22:24+00:00",
+    "metrics": {
+      "all": {
+        "n": 19850,
+        "recall@5": 0.018741,
+        "ndcg@5": 0.012496,
+        "hits@5": 372,
+        "recall@10": 0.030882,
+        "ndcg@10": 0.016114,
+        "hits@10": 613,
+        "recall@20": 0.049118,
+        "ndcg@20": 0.020642,
+        "hits@20": 975
+      },
+      "cold": {
+        "n": 1588,
+        "recall@5": 0.019521,
+        "ndcg@5": 0.012673,
+        "hits@5": 31,
+        "recall@10": 0.030856,
+        "ndcg@10": 0.016342,
+        "hits@10": 49,
+        "recall@20": 0.047859,
+        "ndcg@20": 0.020934,
+        "hits@20": 76
+      },
+      "cold_reward_visible": {
+        "n": 793,
+        "recall@5": 0.020177,
+        "ndcg@5": 0.013466,
+        "hits@5": 16,
+        "recall@10": 0.032787,
+        "ndcg@10": 0.017364,
+        "hits@10": 26,
+        "recall@20": 0.050441,
+        "ndcg@20": 0.022243,
+        "hits@20": 40
+      },
+      "cold_never_rewarded": {
+        "n": 795,
+        "recall@5": 0.018868,
+        "ndcg@5": 0.011882,
+        "hits@5": 15,
+        "recall@10": 0.028931,
+        "ndcg@10": 0.015322,
+        "hits@10": 23,
+        "recall@20": 0.045283,
+        "ndcg@20": 0.019627,
+        "hits@20": 36
+      }
+    }
+  }
+}
